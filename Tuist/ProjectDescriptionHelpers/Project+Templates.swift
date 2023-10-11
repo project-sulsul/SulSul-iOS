@@ -72,6 +72,19 @@ extension Project {
                     resources: resources,
                     scripts: scripts,
                     dependencies: dependencies
+                ),
+                
+                Target(
+                    name: "\(name)-test",
+                    platform: .iOS,
+                    product: product,
+                    bundleId: "\(bundleID).test",
+                    deploymentTarget: .iOS(targetVersion: iosVersion, devices: [.iphone, .ipad]),
+                    infoPlist: infoPlist, //Target test info plist 이름 변경 필요
+                    sources: sources,
+                    resources: resources,
+                    scripts: scripts,
+                    dependencies: dependencies
                 )
             ],
             schemes: schemes
