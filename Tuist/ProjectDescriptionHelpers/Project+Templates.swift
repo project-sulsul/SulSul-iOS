@@ -18,7 +18,7 @@ extension Project {
         scripts: [TargetScript] = [],
         resources: ProjectDescription.ResourceFileElements? = nil
     ) -> Project {
-        return self.project(
+        return self.testProject(
             name: name,
             product: .app,
             bundleID: bundleID + "\(name)",
@@ -48,6 +48,37 @@ extension Project {
     }
     
     public static func project(
+        name: String,
+        product: Product,
+        bundleID: String,
+        schemes: [Scheme] = [],
+        dependencies: [TargetDependency] = [],
+        infoPlist: InfoPlist = .default,
+        sources: ProjectDescription.SourceFilesList? = nil,
+        scripts: [TargetScript] = [],
+        resources: ProjectDescription.ResourceFileElements? = nil
+    ) -> Project {
+        return Project(
+            name: name,
+            targets: [
+                Target(
+                    name: name,
+                    platform: .iOS,
+                    product: product,
+                    bundleId: bundleID,
+                    deploymentTarget: .iOS(targetVersion: iosVersion, devices: [.iphone, .ipad]),
+                    infoPlist: infoPlist,
+                    sources: sources,
+                    resources: resources,
+                    scripts: scripts,
+                    dependencies: dependencies
+                )
+            ],
+            schemes: schemes
+        )
+    }
+    
+    public static func testProject(
         name: String,
         product: Product,
         bundleID: String,
