@@ -10,6 +10,7 @@ import ProjectDescription
 public enum Module {
     case app
     case designSystem
+//    case designSystemApp
     case feature
     case service
     case thirdParty
@@ -23,6 +24,8 @@ extension Module {
             return "App"
         case .designSystem:
             return "DesignSystem"
+//        case .designSystemApp:
+//            return "DesignSystemApp"
         case .feature:
             return "Feature"
         case .service:

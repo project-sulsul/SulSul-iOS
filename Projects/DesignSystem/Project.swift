@@ -8,7 +8,7 @@
 import ProjectDescription
 import ProjectDescriptionHelpers
 
-let project = Project.framework(name: Module.designSystem.name,
+let project = Project.app2(name: Module.designSystem.name,
                                 dependencies: [Module.thirdParty.project],
                                 sources: .default,
                                 resources: .default)

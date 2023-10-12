@@ -29,6 +29,26 @@ extension Project {
             resources: resources
         )
     }
+    
+    public static func app2(
+        name: String,
+        dependencies: [TargetDependency] = [],
+        infoPlist: InfoPlist = .default,
+        sources: ProjectDescription.SourceFilesList? = nil,
+        scripts: [TargetScript] = [],
+        resources: ProjectDescription.ResourceFileElements? = nil
+    ) -> Project {
+        return self.featureProject(
+            name: name,
+            product: .app,
+            bundleID: bundleID + "\(name)",
+            dependencies: dependencies,
+            infoPlist: infoPlist,
+            sources: sources,
+            scripts: scripts,
+            resources: resources
+        )
+    }
 }
 
 extension Project {
@@ -72,6 +92,66 @@ extension Project {
                     resources: resources,
                     scripts: scripts,
                     dependencies: dependencies
+                )
+            ],
+            schemes: schemes
+        )
+    }
+    
+    public static func featureProject(
+        name: String,
+        product: Product,
+        bundleID: String,
+        schemes: [Scheme] = [],
+        dependencies: [TargetDependency] = [],
+        infoPlist: InfoPlist = .default,
+        sources: ProjectDescription.SourceFilesList? = nil,
+        scripts: [TargetScript] = [],
+        resources: ProjectDescription.ResourceFileElements? = nil
+    ) -> Project {
+        return Project(
+            name: name,
+            targets: [
+                Target(
+                    name: "\(name)",
+                    platform: .iOS,
+                    product: .framework,
+                    bundleId: "\(bundleID).\(name)",
+                    deploymentTarget: .iOS(targetVersion: iosVersion, devices: [.iphone, .ipad]),
+                    infoPlist: infoPlist,
+                    sources: sources,
+                    resources: resources,
+                    scripts: scripts,
+                    dependencies: dependencies
+                ),
+                
+                Target(
+                    name: "\(name)App",
+                    platform: .iOS,
+                    product: .app,
+                    bundleId: "\(bundleID).\(name)App",
+                    deploymentTarget: .iOS(targetVersion: iosVersion, devices: [.iphone, .ipad]),
+                    infoPlist: .extendingDefault(with: [
+                        "UILaunchStoryboardName": "LaunchScreen",
+                        "UIApplicationSceneManifest": .dictionary(
+                            [
+                                "UIApplicationSupportsMultipleScenes": false,
+                                "UISceneConfigurations": [
+                                    "UIWindowSceneSessionRoleApplication": [
+                                        [
+                                            "UISceneConfigurationName": "Default Configuration",
+                                            "UISceneDelegateClassName": "$(PRODUCT_MODULE_NAME).SceneDelegate"
+                                        ],
+                                    ]
+                                ]
+                            ]
+                        )
+                    ]
+                                                ), //Target test info plist 이름 변경 필요
+                    sources: ["\(name)App/Sources/**"],
+                    resources: ["\(name)App/Resources/**"],
+                    scripts: scripts,
+                    dependencies: [Module.designSystem.project]
                 )
             ],
             schemes: schemes
