@@ -8,10 +8,13 @@
 import ProjectDescription
 
 public enum Module {
-    case app
-    case designSystem
-    case feature
-    case service
+    case sulsul
+    case loginFeature
+    case signUpFeature
+    case core
+    case ui
+    case network
+    case utils
     case thirdParty
 }
 
@@ -19,14 +22,20 @@ extension Module {
     
     public var name: String {
         switch self {
-        case .app:
-            return "App"
-        case .designSystem:
-            return "DesignSystem"
-        case .feature:
-            return "Feature"
-        case .service:
-            return "Service"
+        case .sulsul:
+            return "SulSul"
+        case .loginFeature:
+            return "LoginFeature"
+        case .signUpFeature:
+            return "SignUpFeature"
+        case .core:
+            return "Core"
+        case .ui:
+            return "UI"
+        case .network:
+            return "Network"
+        case .utils:
+            return "Utils"
         case .thirdParty:
             return "ThirdParty"
         }
@@ -39,6 +48,10 @@ extension Module {
     public var project: TargetDependency {
         return .project(target: self.name, path: self.path)
     }
+    
+//    public var featureProject: TargetDependency {
+//        return .project(target: self.name, path: self.path)
+//    }
 }
 
 extension Module: CaseIterable { }
