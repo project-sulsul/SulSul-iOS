@@ -11,8 +11,8 @@ open class BaseViewController: UIViewController {
     open override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = DesignSystemAsset.black.color
-        navigationController?.isNavigationBarHidden = true
+        view.overrideUserInterfaceStyle = .dark
+        view.backgroundColor = .white
         
         addViews()
         makeConstraints()

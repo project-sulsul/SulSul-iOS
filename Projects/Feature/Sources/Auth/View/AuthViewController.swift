@@ -22,7 +22,7 @@ public final class AuthViewController: BaseViewController, MainBaseCoordinated {
     }
 
     private lazy var titleLabel = UILabel().then {
-        $0.setTextLineHeight(height: 40)
+        $0.setLineHeight(40)
         $0.font = Font.bold(size: 32)
         $0.numberOfLines = 2
         $0.text = "만나서\n반가워요! :)"

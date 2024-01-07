@@ -62,7 +62,6 @@ final class SelectSnackViewModel {
         
         sectionModels = changedSectionModels
         cellModels = changedCellModels
-        print("|| 변경 값 : \(sectionModels[indexPath.section].cellModels[indexPath.row].isSelect)")
     }
     
     // MARK: Output Method
