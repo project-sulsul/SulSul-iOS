@@ -10,7 +10,7 @@ import Combine
 import Service
 import Alamofire
 
-final class SelectUserNameViewModel: NSObject {
+public final class SelectUserNameViewModel: NSObject {
     
     private let jsonDecoder = JSONDecoder()
     

@@ -12,13 +12,23 @@ import GoogleSignIn
 import KakaoSDKAuth
 import KakaoSDKUser
 import Service
+import Combine
 
 final class AuthViewModel: NSObject {
+    
+    // MARK: - 임시 화면 전환용 퍼블리셔
+    private var tempCurrentState = PassthroughSubject<Bool, Never>()
     
     private lazy var jsonDecoder = JSONDecoder()
     
     override public init() {
         super.init()
+        
+        bind()
+    }
+    
+    private func bind() {
+        
     }
     
     public func continueWithApple() {
@@ -31,6 +41,11 @@ final class AuthViewModel: NSObject {
 
     public func continueWithGoogle(id: String, item: String) {
         signin(type: .google, id: id, item: item)
+    }
+    
+    // MARK: - 임시 화면 전환용 삭제 예정
+    func tempCurrentStatePublisher() -> AnyPublisher<Bool, Never> {
+        return tempCurrentState.eraseToAnyPublisher()
     }
 }
 
@@ -104,6 +119,7 @@ extension AuthViewModel {
             UserApi.shared.loginWithKakaoTalk { (oauthToken, error) in
                 guard error != nil else { return }
                 
+                // error가 닐이 아닐때 -> 에러 발생할때
                 if let accessToken = oauthToken?.accessToken {
                     let url = SignInType.kakao.endpoint()
                     let parameters: Parameters = ["access_token": accessToken]
@@ -123,9 +139,11 @@ extension AuthViewModel {
                     }
                 }
             }
+        } else {
+            //
         }
         UserApi.shared.loginWithKakaoAccount { (oauthToken, error) in
-            guard error != nil else { return }
+            guard error == nil else { return }
             
             if let accessToken = oauthToken?.accessToken {
                 let url = SignInType.kakao.endpoint()
@@ -139,6 +157,8 @@ extension AuthViewModel {
                             let expiresIn = data.expiresIn
                             
                             KeychainStore.shared.create(item: accessToken, label: "accessToken")
+                            
+                            self.tempCurrentState.send(true)
                         }
                     case .failure(let error):
                         print(error)

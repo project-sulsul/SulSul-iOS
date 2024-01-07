@@ -21,14 +21,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(frame: windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
         
-//        // 키체인 테스트
+        // 키체인 테스트
 //        if KeychainStore.shared.read(label: "accessToken") != nil {
-//            let viewController = SetUserNameViewController()
+//            let viewModel = SelectUserNameViewModel()
+//            let viewController = SetUserNameViewController(viewModel: viewModel)
 //            window?.rootViewController = viewController
 //        } else {
-//            let viewController = SignInViewController()
+//            let viewController = AuthViewController()
 //            window?.rootViewController = viewController
 //        }
+        
         
         mainCoordinator = MainCoordinator()
         window?.rootViewController = mainCoordinator?.start()

@@ -11,9 +11,21 @@ import DesignSystem
 
 public final class SetUserNameViewController: BaseViewController {
     
-    private var viewModel: SelectUserNameViewModel?
+    var coordinator: AuthBaseCoordinator?
+    private var viewModel: SelectUserNameViewModel
     private var cancelBag = Set<AnyCancellable>()
     private var randomNickname = ""
+    
+    public init(viewModel: SelectUserNameViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+        hidesBottomBarWhenPushed = true
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     private lazy var topHeaderView = UIView()
     
@@ -98,7 +110,7 @@ public final class SetUserNameViewController: BaseViewController {
         overrideUserInterfaceStyle = .dark
         
         viewModel = SelectUserNameViewModel()
-        viewModel?.requestRandomNickname()
+        viewModel.requestRandomNickname()
         
         bind()
         addViews()
@@ -207,7 +219,7 @@ extension SetUserNameViewController: UITextFieldDelegate {
 
 extension SetUserNameViewController {
     private func bind() {
-        viewModel?.userNamePublisher()
+        viewModel.userNamePublisher()
             .sink { [weak self] userName in
                 self?.userNameTextField.text = userName
                 self?.randomNickname = userName
@@ -299,7 +311,7 @@ extension SetUserNameViewController {
     }
     
     @objc private func generateButtonDidTap() {
-        viewModel?.requestRandomNickname()
+        viewModel.requestRandomNickname()
     }
     
     @objc private func resetButtonDidTap() {

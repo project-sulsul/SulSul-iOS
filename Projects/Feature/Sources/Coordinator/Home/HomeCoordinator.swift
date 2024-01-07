@@ -19,6 +19,9 @@ final class HomeCoordinator: HomeBaseCoordinator {
     }
     
     func moveTo(appFlow: Flow, userData: [String: Any]?) {
-        
+        guard let tabBarFlow = appFlow.tabBarFlow else {
+            parentCoordinator?.moveTo(appFlow: appFlow, userData: userData)
+            return
+        }
     }
 }

@@ -48,8 +48,8 @@ final class AuthCoordinator: AuthBaseCoordinator {
     
     private func startProfileInputFlow(_ scene: ProfileInputScene, userData: [String: Any]?) {
         switch scene {
-//        case .nickName:
-//            moveToNickNameScene(userData)
+        case .nickName:
+            moveToNickNameScene(userData)
         case .selectDrink:
             moveToSelectDrinkScene(userData)
         case .selectSnack:
@@ -59,9 +59,12 @@ final class AuthCoordinator: AuthBaseCoordinator {
 }
 
 extension AuthCoordinator {
-//    private func moveToNickNameScene(_ userData: [String: Any]?) {
-//        
-//    }
+    private func moveToNickNameScene(_ userData: [String: Any]?) {
+        let viewModel = SelectUserNameViewModel()
+        let setUserNameVC = SetUserNameViewController(viewModel: viewModel)
+        setUserNameVC.coordinator = self
+        currentNavigationViewController?.pushViewController(setUserNameVC, animated: false)
+    }
     private func moveToSelectDrinkScene(_ userData: [String: Any]?) {
         let viewModel = SelectDrinkViewModel()
         let selectDrinkVC = SelectDrinkViewController(viewModel: viewModel)

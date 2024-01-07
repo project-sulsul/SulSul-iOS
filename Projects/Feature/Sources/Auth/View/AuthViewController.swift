@@ -7,9 +7,14 @@
 
 import DesignSystem
 import GoogleSignIn
+import Service
 import UIKit
+import Combine
 
-public final class AuthViewController: BaseViewController {
+public final class AuthViewController: BaseViewController, MainBaseCoordinated {
+    var coordinator: MainBaseCoordinator?
+    
+    private var cancelBag = Set<AnyCancellable>()
     var viewModel: AuthViewModel?
 
     private lazy var topView = UIView().then {
@@ -85,6 +90,17 @@ public final class AuthViewController: BaseViewController {
         addViews()
         makeConstraints()
         setupIfNeeded()
+        bind()
+    }
+    
+    private func bind() {
+        viewModel?.tempCurrentStatePublisher()
+            .sink { [weak self] state in
+                if state {
+                    self?.coordinator?.moveTo(appFlow: AppFlow.tabBar(.auth(.profileInput(.nickName))), userData: nil)
+                }
+            }
+            .store(in: &cancelBag)
     }
 
     override public func addViews() {

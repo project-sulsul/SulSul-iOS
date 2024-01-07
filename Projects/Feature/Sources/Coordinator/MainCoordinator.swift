@@ -20,7 +20,7 @@ public final class MainCoordinator: MainBaseCoordinator {
         tabBarCoordinator.parentCoordinator = self
         mainTabBar = tabBarCoordinator.start() as? UITabBarController
         
-        let splashVC = SplashViewController()
+        let splashVC = AuthViewController()
         splashVC.coordinator = self
         rootViewController = UINavigationController(rootViewController: splashVC)
         rootViewController.hidesBottomBarWhenPushed = true
@@ -28,9 +28,18 @@ public final class MainCoordinator: MainBaseCoordinator {
         let navigation = rootViewController as? UINavigationController
         navigation?.isNavigationBarHidden = true
         return rootViewController
+        
+        
+        
+//        tabBarCoordinator.parentCoordinator = self
+//        mainTabBar = tabBarCoordinator.start() as? UITabBarController
+//        rootViewController = UINavigationController(rootViewController: tabBarCoordinator.start())
+//        return rootViewController
+
     }
     
     public func moveTo(appFlow: Flow, userData: [String: Any]?) {
+        print(appFlow.appFlow)
         guard let flow = appFlow.appFlow else { return }
         
         switch flow {
@@ -42,7 +51,7 @@ public final class MainCoordinator: MainBaseCoordinator {
     }
     
     private func startIntroFlow(userData: [String: Any]?) {
-        let introVC = IntroViewController()
+        let introVC = AuthViewController()
         introVC.coordinator = self
         rootNavigationController?.pushViewController(introVC, animated: false)
     }
