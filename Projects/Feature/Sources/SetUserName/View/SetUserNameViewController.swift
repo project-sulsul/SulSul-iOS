@@ -322,6 +322,7 @@ extension SetUserNameViewController {
     
     @objc private func nextButtonDidTap() {
         #warning("다음 화면으로 이동하는 것을 구현해야 해요.")
+        self.coordinator?.moveTo(appFlow: TabBarFlow.auth(.profileInput(.selectDrink)), userData: nil)
     }
     
     @objc private func keyboardWillShow(notification: NSNotification) {

@@ -8,6 +8,8 @@
 import UIKit
 
 final class HomeCoordinator: HomeBaseCoordinator {
+    var currentFlowManager: CurrentFlowManager?
+    
     var parentCoordinator: Coordinator?
     var rootViewController: UIViewController = UIViewController()
     
@@ -22,6 +24,20 @@ final class HomeCoordinator: HomeBaseCoordinator {
         guard let tabBarFlow = appFlow.tabBarFlow else {
             parentCoordinator?.moveTo(appFlow: appFlow, userData: userData)
             return
+        }
+        
+        switch tabBarFlow {
+        case .home(let homeScene):
+            moveToHomeScene(homeScene, userData: userData)
+        default:
+            parentCoordinator?.moveTo(appFlow: appFlow, userData: userData)
+        }
+    }
+    
+    func moveToHomeScene(_ scene: HomeScene, userData: [String: Any]?) {
+        switch scene {
+        case .main:
+            rootNavigationController?.popToRootViewController(animated: true)
         }
     }
 }

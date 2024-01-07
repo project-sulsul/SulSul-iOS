@@ -101,6 +101,8 @@ enum ProfileInputScene {
     case nickName
     case selectDrink
     case selectSnack
+    case addSnack
+    case completeSelectSnack
 }
 
 enum ProfileManagementScene {

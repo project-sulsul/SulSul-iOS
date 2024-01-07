@@ -10,8 +10,20 @@ import Combine
 import DesignSystem
 
 public class AddSnackViewController: BaseViewController {
+    var coordinator: AuthBaseCoordinator?
+    
     private var cancelBag = Set<AnyCancellable>()
-    private lazy var viewModel = AddSnackViewModel(userId: 0)
+    private let viewModel: AddSnackViewModel
+    
+    init(viewModel: AddSnackViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     private lazy var backButton = UIButton().then {
         $0.setImage(UIImage(named: "common_leftArrow")?.withTintColor(DesignSystemAsset.gray900.color), for: .normal)

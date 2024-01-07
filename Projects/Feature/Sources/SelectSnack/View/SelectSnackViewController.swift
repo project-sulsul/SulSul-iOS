@@ -31,7 +31,7 @@ public final class SelectSnackViewController: BaseViewController {
     private lazy var noFindSnackButton = UIButton().then {
         $0.setTitle("찾는 안주가 없어요", for: .normal)
         $0.titleLabel?.font = Font.semiBold(size: 14)
-        $0.addTarget(self, action: #selector(didTabBackButton), for: .touchUpInside)
+        $0.addTarget(self, action: #selector(didTabNoFindSnackButton), for: .touchUpInside)
     }
     
     private lazy var resultEmptyView = SearchResultEmptyView().then {
@@ -221,11 +221,11 @@ public final class SelectSnackViewController: BaseViewController {
     }
     
     @objc private func didTabNoFindSnackButton() {
-        
+        self.coordinator?.moveTo(appFlow: TabBarFlow.auth(.profileInput(.addSnack)), userData: nil)
     }
     
     @objc private func didTabNextButton() {
-        
+        self.coordinator?.moveTo(appFlow: TabBarFlow.auth(.profileInput(.completeSelectSnack)), userData: nil)
     }
 }
 
