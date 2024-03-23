@@ -18,7 +18,7 @@ struct MainPageViewModel {
     private let differenceFeeds = CurrentValueSubject<[PopularFeed], Never> ([])
 //    private let byAlcoholFeeds = CurrentValueSubject<[ByAlcoholFeed], Never> ([])
     // MARK: - (비로그인) 술 종류
-    private let kindOfAlcohol = CurrentValueSubject<[String], Never> ([])
+    private let kindOfAlcohol = CurrentValueSubject<[CanSelectAlcoholModel], Never> ([])
     
     init() {
         getPopularFeeds()
@@ -38,10 +38,8 @@ struct MainPageViewModel {
             switch result {
             case .success(let response):
                 if let alcoholFeedList = try? self.jsonDecoder.decode(RemoteFeedsByAlcoholItem.self, from: response) {
-//                    let mappedPopularFeeds = self.mainPageMapper.popularFeeds(from: popularFeedList)
-//                    print(">>>>>>3")
-//                    print(popularFeedList)
-                    kindOfAlcohol.send(alcoholFeedList.subtypes)
+                    let mappedItem = self.mainPageMapper.kindOfAlcohol(from: alcoholFeedList.subtypes)
+                    kindOfAlcohol.send(mappedItem)
                     print(">>>>>@#!@>>>")
                     print(alcoholFeedList.subtypes)
                 } else {
@@ -126,7 +124,20 @@ struct MainPageViewModel {
         return differenceFeeds.value
     }
     
-    func getKindOfAlcoholValue() -> [String] {
+    func getKindOfAlcoholValue() -> [CanSelectAlcoholModel] {
         return kindOfAlcohol.value
+    }
+    
+    func isSelectedKindOfAlcohol(_ index: Int) {
+        var mutable = kindOfAlcohol.value
+        
+        for alcoholIndex in 0..<mutable.count {
+            mutable[alcoholIndex].isSelected = (alcoholIndex == index)
+        }
+        kindOfAlcohol.send(mutable)
+    }
+    
+    func kindOfAlcoholPublisher() -> AnyPublisher<[CanSelectAlcoholModel], Never> {
+        return kindOfAlcohol.eraseToAnyPublisher()
     }
 }

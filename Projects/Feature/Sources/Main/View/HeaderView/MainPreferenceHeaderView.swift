@@ -7,10 +7,12 @@
 
 import UIKit
 import DesignSystem
+import Combine
 
 final class MainPreferenceHeaderView: UICollectionReusableView {
     
     var viewModel: MainPageViewModel?
+    private var cancelBag = Set<AnyCancellable>()
     
     private lazy var containerView = UIView()
     
@@ -33,6 +35,7 @@ final class MainPreferenceHeaderView: UICollectionReusableView {
         addViews()
         makeConstraints()
         setupIfNeeded()
+        bind()
     }
     
     required init?(coder: NSCoder) {
@@ -41,6 +44,16 @@ final class MainPreferenceHeaderView: UICollectionReusableView {
     
     override func prepareForReuse() {
         super.prepareForReuse()
+    }
+    
+    private func bind() {
+        print(">>>>>")
+        print(viewModel) viewmodel이 안와
+        viewModel?.kindOfAlcoholPublisher()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.preferecneCollectionView.reloadData()
+            }.store(in: &cancelBag)
     }
     
     private func addViews() {
@@ -99,11 +112,11 @@ extension MainPreferenceHeaderView: UICollectionViewDataSource {
         var alcohol = viewModel?.getKindOfAlcoholValue()[indexPath.item]
         guard let alcohol = alcohol else { return cell }
         
-        cell.bind(alcohol)
-        
         cell.containerView.setOpaqueTapGestureRecognizer { [weak self] in
-            cell.updateView()
+            self?.viewModel?.isSelectedKindOfAlcohol(indexPath.item)
         }
+        
+        cell.bind(alcohol)
         
         return cell
     }

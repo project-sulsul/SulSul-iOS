@@ -8,9 +8,17 @@
 import UIKit
 import DesignSystem
 
+struct CanSelectAlcoholModel {
+    var title: String
+    var isSelected: Bool = false
+}
+
 final class MainPreferenceHeaderViewCell: UICollectionViewCell {
     
-    lazy var containerView = TouchableView()
+    lazy var containerView = TouchableView().then({
+        $0.layer.cornerRadius = moderateScale(number: 16)
+        $0.backgroundColor = DesignSystemAsset.black.color
+    })
     
     private lazy var titleLabel = UILabel().then({
         $0.text = "test"
@@ -42,13 +50,21 @@ final class MainPreferenceHeaderViewCell: UICollectionViewCell {
         }
     }
     
-    func bind(_ title: String) {
-        titleLabel.text = title
+    func bind(_ model: CanSelectAlcoholModel) {
+        titleLabel.text = model.title
+        if model.isSelected {
+            containerView.backgroundColor = DesignSystemAsset.main.color
+            titleLabel.textColor = DesignSystemAsset.gray050.color
+        } else {
+            containerView.backgroundColor = DesignSystemAsset.black.color
+            titleLabel.textColor = DesignSystemAsset.gray400.color
+        }
     }
     
-    func updateView() {
-        containerView.layer.cornerRadius = moderateScale(number: 16)
-        containerView.backgroundColor = DesignSystemAsset.main.color
-        titleLabel.textColor = DesignSystemAsset.gray050.color
-    }
+//    func updateView() {
+//        containerView.layer.cornerRadius = moderateScale(number: 16)
+//        containerView.backgroundColor = DesignSystemAsset.main.color
+//        titleLabel.textColor = DesignSystemAsset.gray050.color
+//        
+//    }
 }
