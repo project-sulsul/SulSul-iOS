@@ -142,6 +142,7 @@ open class WriteContentViewController: BaseHeaderViewController, CommonBaseCoord
     }
     
     open override func viewWillAppear(_ animated: Bool) {
+        // MARK: 선택된 데이터가 하나라도 없을 경우 이미지 인식 retry
         if let thumnailImage = images.first,
            editViewController.selectedDrink == nil || editViewController.selectedSnack == nil {
             viewModel.uploadImage(thumnailImage)
