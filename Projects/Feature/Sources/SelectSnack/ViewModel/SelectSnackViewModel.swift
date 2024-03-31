@@ -8,20 +8,76 @@
 import Combine
 import Foundation
 import Service
+import Alamofire
 
 final class SelectSnackViewModel {
     private lazy var jsonDecoder = JSONDecoder()
+    private var cancelBag = Set<AnyCancellable>()
     private lazy var mapper = PairingModelMapper()
+    private lazy var userMapper = UserMapper()
     
+    private let userId = UserDefaultsUtil.shared.getInstallationId()
+    private let accessToken = KeychainStore.shared.read(label: "accessToken")
+    private var userInfo: UserInfoModel?
     // MARK: Output Subject
     private lazy var setCompletedSnackData = PassthroughSubject<Void, Never>()
     private lazy var searchResultCountData = PassthroughSubject<Int, Never>()
+    private var setUserSnackPreference = PassthroughSubject<Void, Never>()
+    private var completeSnackPreference = PassthroughSubject<Void, Never>()
     private lazy var initSectionModels = [SnackSectionModel]()
     private lazy var sectionModels = [SnackSectionModel]()
     private lazy var cellModels = [SnackModel]()
     
     init() {
+        bind()
+    }
+    
+    private func bind() {
         requestSnackList()
+        
+        getUserInfo()
+        
+        setUserSnackPreference
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                let selectedIds = cellModels.filter { $0.isSelect }.map { $0.id }
+                
+                let params: [String: Any] = ["alcohols": userInfo?.preference.alcohols,
+                                             "foods": selectedIds]
+                var headers: HTTPHeaders = [
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + accessToken!
+                ]
+                
+                NetworkWrapper.shared.putBasicTask(stringURL: "/users/\(userId)/preference", parameters: params, header: headers) { [weak self] result in
+                    switch result {
+                    case .success(let response):
+                        if let userData = try? self?.jsonDecoder.decode(RemoteUserInfoItem.self, from: response) {
+                            self?.completeSnackPreference.send(())
+                        } else {
+                            print("Decoding failed.")
+                        }
+                    case.failure(let error):
+                        print(error)
+                    }
+                }
+            }.store(in: &cancelBag)
+    }
+    
+    private func getUserInfo() {
+        NetworkWrapper.shared.getBasicTask(stringURL: "/users/\(userId)") { [weak self] result in
+            switch result {
+            case .success(let response):
+                if let userData = try? self?.jsonDecoder.decode(RemoteUserInfoItem.self, from: response) {
+                    guard let mappedUserInfo = self?.userMapper.userInfoModel(from: userData) else { return }
+                    self?.userInfo = mappedUserInfo
+                } else {
+                    print("디코딩 모델 에러 9")
+                }
+            case .failure(let error):
+                print(error)
+            }
+        }
     }
     
     private func makeSectionModelsWith(_ snackModels: [SnackModel]) -> [SnackSectionModel] {
@@ -126,6 +182,14 @@ final class SelectSnackViewModel {
     
     func searchResultCountDataPublisher() -> AnyPublisher<Int, Never> {
         return searchResultCountData.eraseToAnyPublisher()
+    }
+    
+    func sendSetUserSnackPreference() {
+        setUserSnackPreference.send(())
+    }
+    
+    func completeSnackPreferencePublisher() -> AnyPublisher<Void, Never> {
+        return completeSnackPreference.eraseToAnyPublisher()
     }
 }
 

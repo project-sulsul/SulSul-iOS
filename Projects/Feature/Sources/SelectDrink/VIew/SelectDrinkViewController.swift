@@ -11,7 +11,7 @@ import Combine
 
 public class SelectDrinkViewController: SelectTasteBaseViewController {
     
-    var coordinator: AuthBaseCoordinator?
+    var coordinator: Coordinator?
     var cancelBag = Set<AnyCancellable>()
     private let viewModel: SelectDrinkViewModel
     
@@ -68,6 +68,7 @@ public class SelectDrinkViewController: SelectTasteBaseViewController {
     }()
     
     public override func viewDidLoad() {
+        self.tabBarController?.setTabBarHidden(true)
         super.viewDidLoad()
         view.backgroundColor = DesignSystemAsset.black.color
         addViews()
@@ -120,6 +121,7 @@ public class SelectDrinkViewController: SelectTasteBaseViewController {
             $0.leading.trailing.bottom.equalToSuperview()
         }
     }
+    
     private func bind() {
         viewModel.setCompletedSnackDataPublisher().sink { [weak self] _ in
             self?.drinkCollectionView.reloadData()
@@ -141,6 +143,16 @@ public class SelectDrinkViewController: SelectTasteBaseViewController {
                 }
             }
             .store(in: &cancelBag)
+        
+        viewModel.completeDrinkPreferencePublisher()
+            .sink { [weak self] in
+                guard let self = self else { return }
+                if let authCoordinator = self.coordinator as? AuthCoordinator {
+                    authCoordinator.moveTo(appFlow: TabBarFlow.auth(.profileInput(.selectSnack)), userData: nil)
+                } else if let moreCoordinator = self.coordinator as? MoreCoordinator {
+                    self.navigationController?.popViewController(animated: true)
+                }
+            }.store(in: &cancelBag)
     }
     
     public override func setupIfNeeded() {
@@ -148,7 +160,7 @@ public class SelectDrinkViewController: SelectTasteBaseViewController {
             self?.navigationController?.popViewController(animated: true)
         }
         submitTouchableLabel.setOpaqueTapGestureRecognizer { [weak self] in
-            self?.coordinator?.moveTo(appFlow: TabBarFlow.auth(.profileInput(.selectSnack)), userData: nil)
+            self?.viewModel.sendSetUserDrinkPreference()
         }
     }
 }
@@ -163,7 +175,7 @@ extension SelectDrinkViewController: UICollectionViewDelegate, UICollectionViewD
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: DrinkCell.reuseIdentifer, for: indexPath) as? DrinkCell else { return UICollectionViewCell() }
         
         let model = viewModel.getDataSource(indexPath.row)
-        cell.model = model
+        cell.bind(model)
         cell.setSelectColor(model.isSelect)
         
         return cell

@@ -76,13 +76,14 @@ final class NoDataCell: UICollectionViewCell {
     func updateView(withType type: NoDataType) {
         switch type {
         case .logOutMyFeed:
-            messageLabel.text = "오늘 먹은 맛있는 조합,\n기록하고 올리기만 하세요!\n분류는 저희가 할게요!"
+            messageLabel.text = "즐거운 여정이 시작될 시간!\n로그인 하고 첫 피드를 작성하러 가볼까요?"
             nextLabel.text = "로그인 하러 가기"
         case .logInMyFeed:
-            messageLabel.text = "즐거운 여정이 시작될 시간!\n첫 번째 피드를 작성하러 가볼까요?"
+            messageLabel.text = "오늘 먹은 맛있는 조합\n기록하기만 하쇼"
             nextLabel.text = "피드 작성하러가기"
         case .likeFeed:
             messageLabel.text = "좋아요 표시한 피드가 없네요..."
+            nextLabel.text = "피드 보러가기"
         }
     }
 }

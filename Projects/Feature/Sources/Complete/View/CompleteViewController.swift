@@ -9,6 +9,7 @@ import DesignSystem
 import UIKit
 
 public final class CompleteViewController: BaseViewController {
+    var coordinator: AuthBaseCoordinator?
     var username = "보라색하이볼"
     
     private lazy var topView = UIView().then {
@@ -26,10 +27,9 @@ public final class CompleteViewController: BaseViewController {
     }
     
     private lazy var subtitleLabel = UILabel().then {
-        $0.font = Font.medium(size: 18)
         $0.text = "\(username)님이 선택해주신 취향으로\n추천해드릴게요!"
         $0.textColor = DesignSystemAsset.gray900.color
-        $0.setLineHeight(28)
+        $0.setLineHeight(28, font: Font.medium(size: 18))
         $0.numberOfLines = 2
     }
     
@@ -104,9 +104,11 @@ public final class CompleteViewController: BaseViewController {
 
 extension CompleteViewController {
     @objc private func backButtonDidTap() {
-        #warning("함께 먹는 안주 화면으로 이동하는 것을 구현해야 해요.")
+        navigationController?.popViewController(animated: true)
     }
+    
     @objc private func mainButtonDidTap() {
-        #warning("메인 화면으로 이동하는 것을 구현해야 해요.")
+        self.coordinator?.currentNavigationViewController?.popToRootViewController(animated: false)
+        self.coordinator?.moveTo(appFlow: TabBarFlow.home(.main), userData: nil)
     }
 }

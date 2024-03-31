@@ -8,9 +8,9 @@
 import UIKit
 
 public extension UIViewController {
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        self.view.endEditing(true)
-    }
+//    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+//        self.view.endEditing(true)
+//    }
     
     // https://www.advancedswift.com/animate-with-ios-keyboard-swift/
     func animateWithKeyboard(notification: NSNotification,

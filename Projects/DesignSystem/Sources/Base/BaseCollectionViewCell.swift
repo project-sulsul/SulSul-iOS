@@ -8,6 +8,10 @@
 import UIKit
 
 open class BaseCollectionViewCell<M>: UICollectionViewCell {
+    public static var id: String {
+        return NSStringFromClass(self)
+    }
+    
     open var model: M? {
         didSet {
             if let model = model {

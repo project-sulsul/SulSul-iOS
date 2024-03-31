@@ -21,6 +21,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         currentScene = scene
         mainCoordinator = MainCoordinator()
         setRootViewController(mainCoordinator!.start())
+//        let vc = CommentViewController()
+//        setRootViewController(vc)
     }
     
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
@@ -55,37 +57,4 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.rootViewController = viewController
         window?.makeKeyAndVisible()
     }
-}
-
-
-//        // 키체인 테스트
-//        if KeychainStore.shared.read(label: "accessToken") != nil {
-//            let viewController = SetUserNameViewController()
-//            window?.rootViewController = viewController
-//        } else {
-//            let viewController = SignInViewController()SettingViewController
-//            window?.rootViewController = viewController
-//        }
-        mainCoordinator = MainCoordinator()
-        window?.rootViewController = mainCoordinator?.start()
-        window?.makeKeyAndVisible()
-    }
-
-    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-        if let url = URLContexts.first?.url {
-            if AuthApi.isKakaoTalkLoginUrl(url) {
-                _ = AuthController.handleOpenUrl(url: url)
-            }
-        }
-    }
-
-    func sceneDidDisconnect(_ scene: UIScene) {}
-
-    func sceneDidBecomeActive(_ scene: UIScene) {}
-
-    func sceneWillResignActive(_ scene: UIScene) {}
-
-    func sceneWillEnterForeground(_ scene: UIScene) {}
-
-    func sceneDidEnterBackground(_ scene: UIScene) {}
 }

@@ -23,6 +23,10 @@ extension String {
         return String(self[start...])
     }
     
+    public func removeSpace() -> String {
+        replacingOccurrences(of: " ", with: "")
+    }
+    
     func isValidPassword() -> Bool {
         let passwordRegEx = "[A-Za-z0-9!@#$%^&*()_+=?~\\[\\]{}~\\.,:;<>\\/\"\'\\`|-]{8,25}"
         let predicate = NSPredicate(format: "SELF MATCHES %@", passwordRegEx)

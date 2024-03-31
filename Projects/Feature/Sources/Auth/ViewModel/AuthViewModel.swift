@@ -12,10 +12,14 @@ import GoogleSignIn
 import KakaoSDKAuth
 import KakaoSDKUser
 import Service
+import Combine
 
 final class AuthViewModel: NSObject {
     
     private lazy var jsonDecoder = JSONDecoder()
+    private lazy var loginSuccess = PassthroughSubject<Bool, Never>()
+    
+    private let errorSubject = CurrentValueSubject<String, Never>("")
     
     override public init() {
         super.init()
@@ -31,6 +35,14 @@ final class AuthViewModel: NSObject {
 
     public func continueWithGoogle(id: String, item: String) {
         signin(type: .google, id: id, item: item)
+    }
+    
+    func loginSuccessPublisher() -> AnyPublisher<Bool, Never> {
+        return loginSuccess.eraseToAnyPublisher()
+    }
+    
+    func getErrorSubject() -> AnyPublisher<String, Never> {
+        return errorSubject.eraseToAnyPublisher()
     }
 }
 
@@ -89,12 +101,14 @@ extension AuthViewModel {
                     let accessToken = data.accessToken
                     let tokenType = data.tokenType
                     let expiresIn = data.expiresIn
-                    
                     KeychainStore.shared.create(item: accessToken, label: "accessToken")
-                    print("구글 로그인 성공")
+                } else {
+                    print("디코딩 모델 에러1")
                 }
             case .failure(let error):
-                print(error)
+                if let networkError = error as? NetworkError {
+                    self.errorSubject.send(networkError.getErrorMessage() ?? "알 수 없는 에러")
+                }
             }
         }
     }
@@ -114,8 +128,13 @@ extension AuthViewModel {
                                 let accessToken = data.accessToken
                                 let tokenType = data.tokenType
                                 let expiresIn = data.expiresIn
+                                let id = data.userID
                                 
+                                UserDefaultsUtil.shared.setUserId(id)
                                 KeychainStore.shared.create(item: accessToken, label: "accessToken")
+                                self.loginSuccess.send(true)
+                            } else {
+                                print("디코딩 모델 에러2")
                             }
                         case .failure(let error):
                             print(error)
@@ -125,7 +144,7 @@ extension AuthViewModel {
             }
         }
         UserApi.shared.loginWithKakaoAccount { (oauthToken, error) in
-            guard error != nil else { return }
+            guard error == nil else { return }
             
             if let accessToken = oauthToken?.accessToken {
                 let url = SignInType.kakao.endpoint()
@@ -137,8 +156,13 @@ extension AuthViewModel {
                             let accessToken = data.accessToken
                             let tokenType = data.tokenType
                             let expiresIn = data.expiresIn
+                            let id = data.userID
                             
+                            UserDefaultsUtil.shared.setUserId(id)
                             KeychainStore.shared.create(item: accessToken, label: "accessToken")
+                            self.loginSuccess.send(true)
+                        } else {
+                            print("디코딩 모델 에러3")
                         }
                     case .failure(let error):
                         print(error)

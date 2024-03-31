@@ -7,16 +7,16 @@
 
 import Foundation
 
-struct UserInfoModel: Decodable {
-    let id: Int?
-    let uid: String?
-    let nickname: String?
-    let image: String?
-    let preference: Preference?
-    let status: String?
+struct UserInfoModel {
+    let id: Int
+    let uid: String
+    let nickname: String
+    let image: String
+    let preference: Preference
+    let status: String
     
-    struct Preference: Decodable {
-        let foods: [Int]?
-        let alcohols: [Int]?
+    struct Preference {
+        let alcohols: [Int]
+        let foods: [Int]
     }
 }

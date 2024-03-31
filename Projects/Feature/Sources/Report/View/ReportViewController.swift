@@ -11,6 +11,7 @@ import DesignSystem
 
 public final class ReportViewController: BaseViewController {
     
+    var coordinator: CommonBaseCoordinator?
     private let viewModel: ReportViewModel = ReportViewModel()
     
     private var buttonBottomConstraint: Constraint?
@@ -91,6 +92,7 @@ public final class ReportViewController: BaseViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = DesignSystemAsset.black.color
+        self.tabBarController?.setTabBarHidden(true)
         addViews()
         makeConstraints()
     }
@@ -175,7 +177,7 @@ public final class ReportViewController: BaseViewController {
     }
     
     @objc private func didTabBackButton() {
-        
+        self.navigationController?.popViewController(animated: true)
     }
     
     public override func deinitialize() {
