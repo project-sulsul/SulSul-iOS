@@ -15,7 +15,7 @@ final class HomeCoordinator: NSObject, HomeBaseCoordinator {
     
     func start() -> UIViewController {
 
-        let homeVC = MainPageViewController()
+        let homeVC = HomeViewController()
         homeVC.coordinator = self
         rootViewController = UINavigationController(rootViewController: homeVC)
         rootNavigationController?.delegate = self
@@ -47,7 +47,7 @@ final class HomeCoordinator: NSObject, HomeBaseCoordinator {
 // MARK: - UINavigationControllerDelegate
 extension HomeCoordinator: UINavigationControllerDelegate {
     func navigationController(_ navigationController: UINavigationController, willShow viewController: UIViewController, animated: Bool) {
-        guard viewController is MainPageViewController else { return }
+        guard viewController is HomeViewController else { return }
         
         let tabBarController = parentCoordinator?.rootViewController as? UITabBarController
         tabBarController?.setTabBarHidden(false)

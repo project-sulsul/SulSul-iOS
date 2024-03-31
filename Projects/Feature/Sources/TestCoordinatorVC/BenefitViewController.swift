@@ -1,5 +1,5 @@
 //
-//  HomeViewController.swift
+//  BenefitViewController.swift
 //  Feature
 //
 //  Created by 이범준 on 2023/11/22.
@@ -8,8 +8,8 @@
 import UIKit
 import DesignSystem
 
-final class HomeViewController: BaseViewController {
-    var coordinator: HomeBaseCoordinator?
+final class BenefitViewController: BaseViewController {
+    var coordinator: BenefitBaseCoordinator?
     
     override func viewDidLoad() {
         super.viewDidLoad()

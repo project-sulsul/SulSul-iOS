@@ -14,7 +14,7 @@ import Kingfisher
 public final class ProfileMainViewController: BaseViewController {
     private var cancelBag = Set<AnyCancellable>()
     var coordinator: MoreBaseCoordinator?
-    private let viewModel: ProfileMainViewModel
+    private let viewModel = ProfileMainViewModel()
     
     private lazy var topHeaderView = UIView()
     private lazy var searchTouchableIamgeView = TouchableImageView(frame: .zero).then({
@@ -29,12 +29,8 @@ public final class ProfileMainViewController: BaseViewController {
     
     private lazy var profileView = UIView()
     
-    private lazy var profileLabelStackView = UIStackView().then({
-        $0.axis = .vertical
-        $0.spacing = moderateScale(number: 8)
-    })
-    
     private lazy var profileLabel = UILabel().then({
+        $0.text = "testestese"
         $0.font = Font.bold(size: 32)
         $0.textColor = DesignSystemAsset.gray900.color
     })
@@ -54,12 +50,12 @@ public final class ProfileMainViewController: BaseViewController {
         $0.distribution = .fillEqually
     })
     
-    private lazy var myFeedTouchableView = UnderlineTouchableView("나의 피드").then({
-        $0.updateView(true)
+    private lazy var myFeedTouchableView = TouchableView().then({
+        $0.backgroundColor = .red
     })
     
-    private lazy var likeFeedTouchableView = UnderlineTouchableView("좋아요 표시한 피드").then({
-        $0.updateView(false)
+    private lazy var likeFeedTouchableView = TouchableView().then({
+        $0.backgroundColor = .blue
     })
     
     private lazy var myFeedView = MyFeedView(viewModel: viewModel, tabBarController: self.tabBarController ?? UITabBarController())
@@ -68,57 +64,25 @@ public final class ProfileMainViewController: BaseViewController {
         $0.isHidden = true
     })
     
-    init(viewModel: ProfileMainViewModel) {
-        self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
     public override func viewDidLoad() {
         super.viewDidLoad()
-        NotificationCenter.default.addObserver(self, selector: #selector(profileIsChanged), name: NSNotification.Name("ProfileIsChanged"), object: nil)
         view.backgroundColor = DesignSystemAsset.black.color
         addViews()
         makeConstraints()
         bind()
-        viewModel.getFeedsByMe()
-        viewModel.getFeedsLikeByMe()
     }
     
     private func bind() {
         viewModel.userInfoPublisher()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] result in
-                guard let self = self else { return }
-                if result.id == 0 {
-                    self.profileLabel.text = "로그인 해주세요!"
-                    self.profileEditTouchableLabel.isHidden = true
-                    self.myFeedView.updateState(.notLogin)
-                } else {
-                    self.profileLabel.text = result.nickname
-                    self.profileEditTouchableLabel.isHidden = false
-                    if let imageURL = URL(string: result.image ?? "") {
-                        self.profileTouchableImageView.kf.setImage(with: imageURL)
-                    }
+                self?.profileLabel.text = result.nickname
+                if let imageURL = URL(string: result.image ?? "") {
+                    self?.profileTouchableImageView.kf.setImage(with: imageURL)
                 }
             }.store(in: &cancelBag)
         
         viewModel.getUserInfo()
-        
-        viewModel.loginButtonIsTappedPublisher()
-              .receive(on: DispatchQueue.main)
-              .sink { [weak self] _ in
-                self?.coordinator?.moveTo(appFlow: TabBarFlow.auth(.login), userData: nil)
-              }.store(in: &cancelBag)    
-        
-        viewModel.goFeedButtonIsTappedPublisher()
-              .receive(on: DispatchQueue.main)
-              .sink { [weak self] _ in
-                  self?.coordinator?.moveTo(appFlow: TabBarFlow.home(.main), userData: nil)
-              }.store(in: &cancelBag)
     }
     
     public override func addViews() {
@@ -130,10 +94,9 @@ public final class ProfileMainViewController: BaseViewController {
                                    selectFeedView,
                                    myFeedView,
                                    likeFeedView])
-        profileView.addSubviews([profileLabelStackView,
+        profileView.addSubviews([profileLabel,
+                                 profileEditTouchableLabel,
                                  profileTouchableImageView])
-        profileLabelStackView.addArrangedSubviews([profileLabel,
-                                                   profileEditTouchableLabel])
         selectFeedView.addArrangedSubviews([myFeedTouchableView,
                                             likeFeedTouchableView])
     }
@@ -163,9 +126,11 @@ public final class ProfileMainViewController: BaseViewController {
             $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 20))
             $0.height.equalTo(moderateScale(number: 72))
         }
-        profileLabelStackView.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
-            $0.leading.equalToSuperview()
+        profileLabel.snp.makeConstraints {
+            $0.top.leading.equalToSuperview()
+        }
+        profileEditTouchableLabel.snp.makeConstraints {
+            $0.bottom.leading.equalToSuperview()
         }
         profileTouchableImageView.snp.makeConstraints {
             $0.centerY.equalToSuperview()
@@ -196,15 +161,11 @@ public final class ProfileMainViewController: BaseViewController {
     public override func setupIfNeeded() {
         myFeedTouchableView.setOpaqueTapGestureRecognizer { [weak self] in
             guard let self = self else { return }
-            myFeedTouchableView.updateView(true)
-            likeFeedTouchableView.updateView(false)
             self.likeFeedView.isHidden = true
             self.myFeedView.isHidden = false
         }
         likeFeedTouchableView.setOpaqueTapGestureRecognizer { [weak self] in
             guard let self = self else { return }
-            myFeedTouchableView.updateView(false)
-            likeFeedTouchableView.updateView(true)
             self.myFeedView.isHidden = true
             self.likeFeedView.isHidden = false
         }
@@ -212,16 +173,10 @@ public final class ProfileMainViewController: BaseViewController {
             self?.coordinator?.moveTo(appFlow: TabBarFlow.more(.profileSetting), userData: nil)
         }
         profileTouchableImageView.setOpaqueTapGestureRecognizer { [weak self] in
-            guard let self = self else { return }
-            self.coordinator?.moveTo(appFlow: TabBarFlow.more(.profileEdit), userData: ["delegate": self])
+            self?.coordinator?.moveTo(appFlow: TabBarFlow.more(.profileEdit), userData: nil)
         }
         profileEditTouchableLabel.setOpaqueTapGestureRecognizer { [weak self] in
-            guard let self = self else { return }
-            self.coordinator?.moveTo(appFlow: TabBarFlow.more(.profileEdit), userData: ["delegate": self])
+            self?.coordinator?.moveTo(appFlow: TabBarFlow.more(.profileEdit), userData: nil)
         }
-    }
-    
-    @objc func profileIsChanged() {
-        viewModel.getUserInfo()
     }
 }

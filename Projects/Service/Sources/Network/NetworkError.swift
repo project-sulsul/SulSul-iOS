@@ -7,25 +7,15 @@
 
 import Foundation
 
-public extension Error {
-    func getErrorMessage() -> String? {
-        return (self as? NetworkError)?.message
-    }
-    
-    func getErrorCode() -> Int? {
-        return (self as? NetworkError)?.statusCode
-    }
-}
-
-public struct NetworkError: Error, Decodable {
+struct NetworkError: Error, Decodable {
     var statusCode: Int? = 0
     var error: String? = ""
     var message: String? = ""
+    var forbiddenWords: [String]?
     
-    public init(statusCode: Int? = nil, error: String? = nil, message: String? = nil) {
-        self.statusCode = statusCode
-        self.error = error
-        self.message = message
+    struct Message: Decodable {
+        let error: String?
+        let message: String?
     }
 }
 
