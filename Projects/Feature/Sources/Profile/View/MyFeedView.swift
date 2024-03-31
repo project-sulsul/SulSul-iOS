@@ -11,16 +11,9 @@ import DesignSystem
 
 class MyFeedView: UIView {
     
-    enum MyFeedState {
-        case loginFeedExist
-        case loginFeedNotExist
-        case notLogin
-    }
-    
     private var cancelBag = Set<AnyCancellable>()
     private var viewModel: ProfileMainViewModel
     private let tabBarController: UITabBarController
-    private var myFeedState: MyFeedState?
     
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout()).then({
         $0.registerCell(NoDataCell.self)
@@ -44,25 +37,20 @@ class MyFeedView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func bind() {
+    func bind() {
         viewModel.myFeedsPublisher()
             .receive(on: DispatchQueue.main)
-            .sink { response in
-                if response.count == 0 {
-                    self.myFeedState = .loginFeedNotExist
-                } else {
-                    self.myFeedState = .loginFeedExist
-                }
+            .sink { _ in
                 self.collectionView.reloadData()
             }
             .store(in: &cancelBag)
     }
     
-    private func addViews() {
+    func addViews() {
         addSubviews([collectionView])
     }
     
-    private func makeConstraints() {
+    func makeConstraints() {
         collectionView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(moderateScale(number: 18))
             $0.leading.equalToSuperview().offset(moderateScale(number: 20))
@@ -71,26 +59,11 @@ class MyFeedView: UIView {
         }
     }
     
-    func updateState(_ myFeedState: MyFeedState) {
-        self.myFeedState = myFeedState
-    }
-    
     private func layout() -> UICollectionViewCompositionalLayout {
-        return UICollectionViewCompositionalLayout { [weak self] _, _ in
-            guard let self = self else { return nil }
-            
+        return UICollectionViewCompositionalLayout { _, _ in
+
+            let itemHeight: CGFloat = self.viewModel.getMyFeedsValue().count == 0 ? 80 + 133 + 80 : 531
             let itemWidth: CGFloat = 1
-            let itemHeight: CGFloat
-            switch myFeedState {
-            case .loginFeedExist:
-                itemHeight = 611
-            case .loginFeedNotExist:
-                itemHeight = 213
-            case .notLogin:
-                itemHeight = 213
-            case nil:
-                itemHeight = 0
-            }
             
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(itemWidth),
                                                   heightDimension: .absolute(moderateScale(number: itemHeight)))
@@ -112,68 +85,27 @@ class MyFeedView: UIView {
 
 extension MyFeedView: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-
-//        if viewModel.getMyFeedsValue().count == 0 {
-//            // MARK: - 빈 셀일때
-//            return 1
-//        } else {
-//            return viewModel.getMyFeedsValue().count
-//        }
-        
-        switch myFeedState {
-        case .loginFeedExist:
+//        return viewModel.getBeneficiaryCountryList().count + 1
+        if viewModel.getMyFeedsValue().count == 0 {
+            // MARK: - 빈 셀일때
+            return 1
+        } else {
             return viewModel.getMyFeedsValue().count
-        case .loginFeedNotExist:
-            return 1
-        case .notLogin:
-            return 1
-        case .none:
-            return 0
         }
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-//        if viewModel.getMyFeedsValue().count == 0 {
-//            guard let cell = collectionView.dequeueReusableCell(NoDataCell.self, indexPath: indexPath) else { return .init() }
-//            cell.updateView(withType: .logInMyFeed)
-//            cell.nextLabel.setOpaqueTapGestureRecognizer { [weak self] in
-//                print("로그인하러가기")
-//            }
-//            return cell
-//        } else {
-//            guard let cell = collectionView.dequeueReusableCell(MyFeedCell.self, indexPath: indexPath) else { return .init() }
-//            let model = viewModel.getMyFeedsValue()[indexPath.row]
-//            cell.bind(model)
-//            return cell
-//        }
-        switch myFeedState {
-        case .loginFeedExist:
-            guard let cell = collectionView.dequeueReusableCell(MyFeedCell.self, indexPath: indexPath) else { return .init() }
-            let model = viewModel.getMyFeedsValue()[indexPath.row]
-            cell.bind(model)
-            
-            return cell
-        case .loginFeedNotExist:
+        if viewModel.getMyFeedsValue().count == 0 {
             guard let cell = collectionView.dequeueReusableCell(NoDataCell.self, indexPath: indexPath) else { return .init() }
             cell.updateView(withType: .logInMyFeed)
             cell.nextLabel.setOpaqueTapGestureRecognizer { [weak self] in
-                print("피드가 없음")
+                print("로그인하러가기")
             }
-            
             return cell
-        case .notLogin:
-            guard let cell = collectionView.dequeueReusableCell(NoDataCell.self, indexPath: indexPath) else { return .init() }
-            cell.updateView(withType: .logOutMyFeed)
-            cell.nextLabel.setOpaqueTapGestureRecognizer { [weak self] in
-                print("로그인하러 가기")
-                guard let selfRef = self else { return }
-                selfRef.viewModel.sendLoginButtonIsTapped()
-            }
-            
-            return cell
-        case .none:
-            guard let cell = collectionView.dequeueReusableCell(NoDataCell.self, indexPath: indexPath) else { return .init() }
-            
+        } else {
+            guard let cell = collectionView.dequeueReusableCell(MyFeedCell.self, indexPath: indexPath) else { return .init() }
+            let model = viewModel.getMyFeedsValue()[indexPath.row]
+            cell.bind(model)
             return cell
         }
     }

@@ -8,17 +8,19 @@
 import UIKit
 
 extension UILabel {
-    public func setLineHeight(_ lineHeight: CGFloat, text: String? = nil, font: UIFont) {
+    public func setLineHeight(_ lineHeight: CGFloat) {
         if let text = text {
             let style = NSMutableParagraphStyle()
+            style.maximumLineHeight = lineHeight
+            style.minimumLineHeight = lineHeight
             
-            if lineHeight > font.lineHeight {
-                style.lineSpacing = lineHeight - font.lineHeight
-            }
+            let attributes: [NSAttributedString.Key: Any] = [
+                .paragraphStyle: style,
+                .baselineOffset: (lineHeight - font.lineHeight) / 4
+            ]
             
-            let attributes: [NSAttributedString.Key: Any] = [.paragraphStyle: style,
-                                                             .font: font]
-            self.attributedText = NSAttributedString(string: text, attributes: attributes)
+            let attrString = NSAttributedString(string: text, attributes: attributes)
+            self.attributedText = attrString
         }
     }
     

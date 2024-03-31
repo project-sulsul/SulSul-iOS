@@ -8,12 +8,10 @@
 import Combine
 import UIKit
 import DesignSystem
-import Service
 
 public final class SetUserNameViewController: BaseViewController {
     
-    var coordinator: AuthBaseCoordinator?
-    private var viewModel: SelectUserNameViewModel
+    private var viewModel: SelectUserNameViewModel?
     private var cancelBag = Set<AnyCancellable>()
     private var randomNickname = ""
     
@@ -95,25 +93,12 @@ public final class SetUserNameViewController: BaseViewController {
         $0.isEnabled = true
     }
     
-    init(viewModel: SelectUserNameViewModel) {
-        self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
     public override func viewDidLoad() {
-        self.tabBarController?.setTabBarHidden(true)
         view.backgroundColor = DesignSystemAsset.black.color
         overrideUserInterfaceStyle = .dark
         
-        backButton.onTapped { [weak self] in
-            self?.navigationController?.popViewController(animated: true)
-        }
-        
-        viewModel.requestRandomNickname()
+        viewModel = SelectUserNameViewModel()
+        viewModel?.requestRandomNickname()
         
         bind()
         addViews()
@@ -222,17 +207,12 @@ extension SetUserNameViewController: UITextFieldDelegate {
 
 extension SetUserNameViewController {
     private func bind() {
-        viewModel.userNamePublisher()
+        viewModel?.userNamePublisher()
             .sink { [weak self] userName in
                 self?.userNameTextField.text = userName
                 self?.randomNickname = userName
             }
             .store(in: &cancelBag)
-        
-        viewModel.setUserNamePublisher()
-            .sink { [weak self] _ in
-                self?.coordinator?.moveTo(appFlow: TabBarFlow.auth(.profileInput(.selectDrink)), userData: nil)
-            }.store(in: &cancelBag)
     }
     
     private func updateValidationLabelStackView(text: String?) {
@@ -319,7 +299,7 @@ extension SetUserNameViewController {
     }
     
     @objc private func generateButtonDidTap() {
-        viewModel.requestRandomNickname()
+        viewModel?.requestRandomNickname()
     }
     
     @objc private func resetButtonDidTap() {
@@ -329,7 +309,7 @@ extension SetUserNameViewController {
     }
     
     @objc private func nextButtonDidTap() {
-        viewModel.sendSetUserName(userId: UserDefaultsUtil.shared.getInstallationId(), userNickName: userNameTextField.text ?? "")
+        #warning("다음 화면으로 이동하는 것을 구현해야 해요.")
     }
     
     @objc private func keyboardWillShow(notification: NSNotification) {

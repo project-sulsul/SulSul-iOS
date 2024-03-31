@@ -14,7 +14,12 @@ final class TransferCoordinator: NSObject, TransferBaseCoordinator {
     var rootViewController: UIViewController = UIViewController()
     
     func start() -> UIViewController {
-        return UIViewController()
+
+        let transferVC = TransferViewController()
+        transferVC.coordinator = self
+        rootViewController = UINavigationController(rootViewController: transferVC)
+        rootNavigationController?.delegate = self
+        return rootViewController
     }
     
     func moveTo(appFlow: Flow, userData: [String: Any]?) {

@@ -8,7 +8,7 @@
 import UIKit
 
 extension UICollectionView {
-    public enum SupplementaryViewOfKind: CustomStringConvertible {
+    enum SupplementaryViewOfKind: CustomStringConvertible {
         case header, footer
         
         public var description: String {
@@ -33,13 +33,13 @@ extension UICollectionView {
         return dequeueReusableCell(withReuseIdentifier: String(describing: T.self), for: indexPath) as? T
     }
     
-    public func registerSupplimentaryView<T: UICollectionReusableView>(_ supplimentaryViewType: T.Type, supplementaryViewOfKind kind: SupplementaryViewOfKind) {
+    func registerSupplimentaryView<T: UICollectionReusableView>(_ supplimentaryViewType: T.Type, supplementaryViewOfKind kind: SupplementaryViewOfKind) {
         register(supplimentaryViewType,
                  forSupplementaryViewOfKind: kind.description,
                  withReuseIdentifier: String(describing: T.self))
     }
     
-    public func dequeueSupplimentaryView<T: UICollectionReusableView>(_ supplimentaryViewType: T.Type, supplementaryViewOfKind kind: SupplementaryViewOfKind, indexPath: IndexPath) -> T? {
+    func dequeueSupplimentaryView<T: UICollectionReusableView>(_ supplimentaryViewType: T.Type, supplementaryViewOfKind kind: SupplementaryViewOfKind, indexPath: IndexPath) -> T? {
         return dequeueReusableSupplementaryView(ofKind: kind.description, withReuseIdentifier: String(describing: T.self), for: indexPath) as? T
     }
 }

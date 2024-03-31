@@ -8,13 +8,22 @@
 import UIKit
 import Combine
 import DesignSystem
-import Service
 
-public final class SearchViewController: BaseHeaderViewController, CommonBaseCoordinated {
-    var coordinator: CommonBaseCoordinator?
-    
+public final class SearchViewController: BaseViewController {
     private var cancelBag = Set<AnyCancellable>()
     private lazy var viewModel = SearchViewModel()
+    
+    private lazy var backButton = UIButton().then {
+        $0.setImage(UIImage(named: "common_leftArrow"), for: .normal)
+        $0.setTitle("검색", for: .normal)
+        $0.titleLabel?.font = Font.bold(size: 18)
+    }
+    
+    private lazy var titleLabel = UILabel().then {
+        $0.font = Font.bold(size: 18)
+        $0.textColor = DesignSystemAsset.gray900.color
+        $0.text = "검색"
+    }
     
     private lazy var searchTextField = UITextField().then {
         $0.placeholder = "검색어를 입력해주세요"
@@ -41,6 +50,7 @@ public final class SearchViewController: BaseHeaderViewController, CommonBaseCoo
         $0.setTitle("모두 삭제", for: .normal)
         $0.titleLabel?.font = Font.semiBold(size: 14)
         $0.titleLabel?.textColor = DesignSystemAsset.gray700.color
+        $0.addTarget(self, action: #selector(didTabRecentKeywordResetButton), for: .touchUpInside)
     }
     
     private lazy var recentKeywordCollectionView = UICollectionView(frame: .zero, collectionViewLayout: generateLayout()).then {
@@ -53,34 +63,8 @@ public final class SearchViewController: BaseHeaderViewController, CommonBaseCoo
         $0.dataSource = self
     }
     
-    private lazy var resultTableView = UITableView(frame: .zero, style: .grouped).then {
-        $0.backgroundColor = DesignSystemAsset.black.color
-        $0.register(SearchFeedCell.self, forCellReuseIdentifier: SearchFeedCell.id)
-        $0.delegate = self
-        $0.dataSource = self
-        $0.separatorStyle = .none
-        $0.sectionFooterHeight = 0
-        $0.isHidden = true
-        
-    }
-    
-    private lazy var emptyLabel = UILabel().then {
-        $0.textColor = DesignSystemAsset.gray600.color
-        $0.font = Font.semiBold(size: 15)
-        $0.isHidden = true
-        $0.numberOfLines = 2
-        $0.textAlignment = .center
-    }
-    
-    private lazy var feedCountLabel = UILabel().then {
-        $0.font = Font.bold(size: 18)
-        $0.textColor = DesignSystemAsset.gray900.color
-    }
-    
     public init() {
         super.init(nibName: nil, bundle: nil)
-        
-        titleLabel.text = "검색"
 
         bind()
         setTabEvents()
@@ -90,55 +74,22 @@ public final class SearchViewController: BaseHeaderViewController, CommonBaseCoo
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.tabBarController?.setTabBarHidden(true)
-    }
-    
     private func bind() {
         setVisibilityKeywordLabel()
         
-        viewModel.reloadRecentKeywordData
-            .sink { [weak self] in
+        viewModel.reloadCollectionViewPublisher()
+            .sink { [weak self] _ in
                 guard let self else { return }
                 
                 self.setVisibilityKeywordLabel()
                 self.recentKeywordCollectionView.reloadData()
             }
             .store(in: &cancelBag)
-        
-        viewModel.reloadSearchResults
-            .sink { [weak self] isEmpty in
-                guard let selfRef = self else { return }
-                
-                self?.recentKeywordTitleLabel.isHidden = true
-                self?.recentKeywordResetButton.isHidden = true
-                
-                self?.resultTableView.isHidden = false
-                self?.resultTableView.reloadData()
-                
-                if !isEmpty {
-                    self?.feedCountLabel.isHidden = false
-                    self?.feedCountLabel.text = "피드 \(selfRef.viewModel.feedSearchResults.count)"
-                    self?.feedCountLabel.asColor(targetString: "\(selfRef.viewModel.feedSearchResults.count)",
-                                                 color: DesignSystemAsset.main.color)
-                }
-                
-                self?.emptyLabel.isHidden = !isEmpty
-                
-                if isEmpty {
-                    self?.emptyLabel.text = "\"\(self?.searchTextField.text ?? "")\"의 \n검색결과가 없어요"
-                    self?.emptyLabel.asColor(targetString: "\"\(self?.searchTextField.text ?? "")\"",
-                                             color: DesignSystemAsset.main.color)
-                }
-            }
-            .store(in: &cancelBag)
     }
     
     private func setTabEvents() {
         recentKeywordResetButton.onTapped { [weak self] in
-            UserDefaultsUtil.shared.remove(.recentKeyword)
+            UserDefaultsUtil.shared.remove(key: .recentKeyword)
             self?.recentKeywordCollectionView.reloadData()
             self?.setVisibilityKeywordLabel()
         }
@@ -167,27 +118,33 @@ public final class SearchViewController: BaseHeaderViewController, CommonBaseCoo
     }
     
     public override func addViews() {
-        super.addViews()
-        
         view.addSubviews([
+            backButton,
+            titleLabel,
             searchTextField,
             searchResetButton,
             lineView,
             recentKeywordTitleLabel,
             recentKeywordResetButton,
-            recentKeywordCollectionView,
-            resultTableView,
-            emptyLabel,
-            feedCountLabel
+            recentKeywordCollectionView
         ])
     }
     
     public override func makeConstraints() {
-        super.makeConstraints()
+        backButton.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(moderateScale(number: 16))
+            $0.leading.equalToSuperview().inset(moderateScale(number: 20))
+            $0.size.equalTo(moderateScale(number: 24))
+        }
+        
+        titleLabel.snp.makeConstraints {
+            $0.centerY.equalTo(backButton)
+            $0.centerX.equalToSuperview()
+        }
         
         searchTextField.snp.makeConstraints {
-            $0.top.equalTo(headerView.snp.bottom).offset(moderateScale(number: 28))
-            $0.leading.equalTo(headerView).offset(moderateScale(number: 20))
+            $0.top.equalTo(backButton.snp.bottom).offset(moderateScale(number: 28))
+            $0.leading.equalTo(backButton)
             $0.trailing.equalTo(searchResetButton.snp.leading).offset(moderateScale(number: -8))
             $0.height.equalTo(moderateScale(number: 40))
         }
@@ -206,7 +163,7 @@ public final class SearchViewController: BaseHeaderViewController, CommonBaseCoo
         
         recentKeywordTitleLabel.snp.makeConstraints {
             $0.top.equalTo(lineView.snp.bottom).offset(moderateScale(number: 21))
-            $0.leading.equalTo(headerView).offset(moderateScale(number: 20))
+            $0.leading.equalTo(backButton)
             $0.height.equalTo(moderateScale(number: 28))
         }
         
@@ -217,29 +174,10 @@ public final class SearchViewController: BaseHeaderViewController, CommonBaseCoo
         
         recentKeywordCollectionView.snp.makeConstraints {
             $0.top.equalTo(recentKeywordTitleLabel.snp.bottom).offset(moderateScale(number: 8))
-            $0.leading.equalTo(headerView).offset(moderateScale(number: 20))
+            $0.leading.equalTo(backButton)
             $0.trailing.equalTo(searchResetButton)
             $0.bottom.equalToSuperview()
         }
-        
-        resultTableView.snp.makeConstraints {
-            $0.top.equalTo(feedCountLabel.snp.bottom).offset(moderateScale(number: 8))
-            $0.leading.trailing.bottom.equalToSuperview()
-        }
-        
-        emptyLabel.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
-            $0.bottom.equalToSuperview().inset(moderateScale(number: 385))
-        }
-        
-        feedCountLabel.snp.makeConstraints {
-            $0.top.equalTo(lineView.snp.bottom).offset(moderateScale(number: 24))
-            $0.leading.equalToSuperview().inset(moderateScale(number: 20))
-        }
-    }
-    
-    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        view.endEditing(true)
     }
 }
 
@@ -256,11 +194,7 @@ extension SearchViewController: UITextFieldDelegate {
         }
         
         recentKeywordCollectionView.reloadData()
-        recentKeywordCollectionView.isHidden = true
-        recentKeywordTitleLabel.isHidden = true
-        recentKeywordResetButton.isHidden = true
-        
-        viewModel.search(text: searchText)
+        setVisibilityKeywordLabel()
         
         return true
     }
@@ -277,11 +211,6 @@ extension SearchViewController: UICollectionViewDelegate, UICollectionViewDataSo
         
         cell.bind(viewModel.searchKeyword(indexPath.row))
         
-        cell.onTapped { [weak self] in
-            self?.searchTextField.text = self?.viewModel.searchKeyword(indexPath.row)
-            self?.viewModel.search(text: self?.searchTextField.text)
-        }
-        
         cell.deleteButton.onTapped {
             self.viewModel.removeSelectedKeyword(indexPath)
         }
@@ -291,48 +220,11 @@ extension SearchViewController: UICollectionViewDelegate, UICollectionViewDataSo
 }
 
 extension SearchViewController {
+    @objc private func didTabRecentKeywordResetButton() {
+        
+    }
+    
     @objc private func didTabsearchResetButton() {
-        searchTextField.text = ""
         
-        emptyLabel.isHidden = true
-        feedCountLabel.isHidden = true
-        resultTableView.isHidden = true
-        
-        recentKeywordTitleLabel.isHidden = false
-        recentKeywordResetButton.isHidden = false
-        recentKeywordCollectionView.isHidden = false
-        
-        setVisibilityKeywordLabel()
-    }
-}
-
-extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
-    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.feedSearchResults.count
-    }
-    
-    public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: SearchFeedCell.id,
-                                                       for: indexPath) as? SearchFeedCell else { return UITableViewCell() }
-        
-        cell.selectionStyle = .none
-        cell.bind(viewModel.feedSearchResults[indexPath.row])
-        
-        cell.onTapped { [weak self] in
-            if let feedId = self?.viewModel.feedSearchResults[indexPath.row].feed_id {
-                self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.feedDetail),
-                                          userData: ["feedId": feedId])
-            }
-        }
-                
-        return cell
-    }
-    
-    public func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return moderateScale(number: 102)
-    }
-    
-    @objc private func didTapBackButton() {
-        self.navigationController?.popViewController(animated: true)
     }
 }
