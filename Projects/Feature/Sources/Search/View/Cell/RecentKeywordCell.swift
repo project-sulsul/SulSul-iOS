@@ -9,7 +9,6 @@ import UIKit
 import DesignSystem
 
 final class RecentKeywordCell: BaseCollectionViewCell<String> {
-    static let id = "\(RecentKeywordCell.self)"
     
     private lazy var containerView = UIView().then {
         $0.backgroundColor = DesignSystemAsset.gray200.color

@@ -35,25 +35,35 @@ final class AuthCoordinator: AuthBaseCoordinator {
         switch flow {
         case .profileInput(let profileInputScene):
             startProfileInputFlow(profileInputScene, userData: userData)
+        case .login:
+            let loginVC = AuthViewController()
+            loginVC.coordinator = self
+            currentNavigationViewController?.interactivePopGestureRecognizer?.isEnabled = true
+            currentNavigationViewController?.pushViewController(loginVC, animated: true)
         }
     }
     
     private func startProfileInputFlow(_ scene: ProfileInputScene, userData: [String: Any]?) {
         switch scene {
-//        case .nickName:
-//            moveToNickNameScene(userData)
+        case .setUserName:
+            moveToNickNameScene(userData)
         case .selectDrink:
             moveToSelectDrinkScene(userData)
         case .selectSnack:
             moveToSelectSnackScene(userData)
+        case .selectComplete:
+            moveToSelectCompleteScene(userData)
         }
     }
 }
 
 extension AuthCoordinator {
-//    private func moveToNickNameScene(_ userData: [String: Any]?) {
-//        
-//    }
+    private func moveToNickNameScene(_ userData: [String: Any]?) {
+        let viewModel = SelectUserNameViewModel()
+        let setUserNameVC = SetUserNameViewController(viewModel: viewModel)
+        setUserNameVC.coordinator = self
+        currentNavigationViewController?.pushViewController(setUserNameVC, animated: false)
+    }
     private func moveToSelectDrinkScene(_ userData: [String: Any]?) {
         let viewModel = SelectDrinkViewModel()
         let selectDrinkVC = SelectDrinkViewController(viewModel: viewModel)
@@ -65,5 +75,10 @@ extension AuthCoordinator {
         let selectSnackVC = SelectSnackViewController(viewModel: viewModel)
         selectSnackVC.coordinator = self
         currentNavigationViewController?.pushViewController(selectSnackVC, animated: true)
+    }
+    private func moveToSelectCompleteScene(_ userData: [String: Any]?) {
+        let selectCompleteVC = CompleteViewController()
+        selectCompleteVC.coordinator = self
+        currentNavigationViewController?.pushViewController(selectCompleteVC, animated: true)
     }
 }

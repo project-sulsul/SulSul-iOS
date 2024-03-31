@@ -7,7 +7,7 @@
 
 import UIKit
 
-public final class TouchableLabel: UILabel {
+public class TouchableLabel: UILabel {
     var isEffectSet: Bool = true
     
     required init?(coder: NSCoder) {

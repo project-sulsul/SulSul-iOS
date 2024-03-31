@@ -52,4 +52,21 @@ public extension UIView {
             }
         }
     }
+    
+    func setShadow(color: UIColor, opacity: Float = 1.0, offSet: CGSize = .zero, radius: CGFloat) {
+      layer.masksToBounds = false
+      layer.shadowColor = color.cgColor
+      layer.shadowOpacity = opacity
+      layer.shadowOffset = offSet
+      layer.shadowRadius = radius
+    }
+    
+    func setGradient(startColor: UIColor, endColor: UIColor, location: [NSNumber] = [0.0, 1.0]) {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [startColor.cgColor, endColor.cgColor]
+        gradientLayer.locations = location
+        gradientLayer.frame = bounds
+                
+        layer.addSublayer(gradientLayer)
+    }
 }

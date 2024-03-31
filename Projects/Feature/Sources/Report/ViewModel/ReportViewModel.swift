@@ -7,11 +7,14 @@
 
 import Foundation
 import Combine
+import Service
+import Alamofire
 
 final class ReportViewModel {
     
     private let jsonDecoder = JSONDecoder()
     private var cancelBag = Set<AnyCancellable>()
+    private let accessToken = KeychainStore.shared.read(label: "accessToken")
     
     private let reportList: [String] = ["🤬 비속어/폭언/비하/음란성 내용",
                                         "🤯 갈등 조장 및 허위사실 유포",
@@ -21,6 +24,25 @@ final class ReportViewModel {
     
     init() {
         
+    }
+    // TODO: - 신고 완료 시 api 호출 -> (피드 아이디 없어서 연동 아직 X)
+    private func setReports(reason: String, type: String, targetId: Int) {
+        let params: [String: Any] = ["reason": reason,
+                                     "type": type,
+                                     "target_id": targetId]
+        var headers: HTTPHeaders = [
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + accessToken!
+        ]
+        NetworkWrapper.shared.postBasicTask(stringURL: "/reports", parameters: params, header: headers) {[weak self] result in
+            switch result {
+            case .success(let response):
+                print(response)
+            case .failure(let error):
+                print(error)
+            }
+            
+        }
     }
     
     func reportListCount() -> Int {

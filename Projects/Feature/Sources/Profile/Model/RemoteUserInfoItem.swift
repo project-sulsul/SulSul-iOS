@@ -16,7 +16,7 @@ struct RemoteUserInfoItem: Decodable {
     let status: String?
     
     struct Preference: Decodable {
-        let foods: [Int]
-        let alcohols: [Int]
+        let foods: [Int]?
+        let alcohols: [Int]?
     }
 }

@@ -14,9 +14,10 @@ final class MoreCoordinator: NSObject, MoreBaseCoordinator {
     var rootViewController: UIViewController = UIViewController()
     
     func start() -> UIViewController {
-        let moreVC = ProfileMainViewController()
-        moreVC.coordinator = self
-        rootViewController = UINavigationController(rootViewController: moreVC)
+        let viewModel = ProfileMainViewModel()
+        let profileMainVC = ProfileMainViewController(viewModel: viewModel)
+        profileMainVC.coordinator = self
+        rootViewController = UINavigationController(rootViewController: profileMainVC)
         rootNavigationController?.delegate = self
         return rootViewController
     }
@@ -38,11 +39,7 @@ final class MoreCoordinator: NSObject, MoreBaseCoordinator {
     func moveToProfileScene(_ scene: ProfileScene, userData: [String: Any]?) {
         switch scene {
         case .main:
-//            let profileViewModel = ProfileViewModel()
-            let profileMainVC = ProfileMainViewController()
-            profileMainVC.coordinator = self
-            currentNavigationViewController?.interactivePopGestureRecognizer?.isEnabled = true
-            currentNavigationViewController?.pushViewController(profileMainVC, animated: true)
+            rootNavigationController?.popToRootViewController(animated: true)
         case .profileSetting:
             let profileSettingVC = ProfileSettingViewController()
             profileSettingVC.coordinator = self
@@ -53,6 +50,16 @@ final class MoreCoordinator: NSObject, MoreBaseCoordinator {
             profileEditVC.coordinator = self
             currentNavigationViewController?.interactivePopGestureRecognizer?.isEnabled = true
             currentNavigationViewController?.pushViewController(profileEditVC, animated: true)
+        case .selectDrink:
+            let viewModel = SelectDrinkViewModel()
+            let selectDrinkVC = SelectDrinkViewController(viewModel: viewModel)
+            selectDrinkVC.coordinator = self
+            currentNavigationViewController?.pushViewController(selectDrinkVC, animated: false)
+        case .selectSnack:
+            let viewModel = SelectSnackViewModel()
+            let selectDrinkVC = SelectSnackViewController(viewModel: viewModel)
+            selectDrinkVC.coordinator = self
+            currentNavigationViewController?.pushViewController(selectDrinkVC, animated: false)
         }
     }
 }

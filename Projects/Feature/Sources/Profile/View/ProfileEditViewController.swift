@@ -54,12 +54,15 @@ public final class ProfileEditViewController: DisappearKeyBoardBaseViewControlle
         $0.font = Font.bold(size: 32)
         $0.tintColor = DesignSystemAsset.white.color
         $0.placeholder = "닉네임을 입력해주세요."
+        //        $0.delegate = self
+        $0.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
     }
     
     private lazy var clearButton = UIButton().then {
+        $0.addTarget(self, action: #selector(clearButtonDidTap), for: .touchUpInside)
         $0.setImage(UIImage(named: "filled_clear"), for: .normal)
     }
-
+    
     private lazy var resetTouchableLabel = TouchableLabel().then({
         $0.text = "랜덤 닉네임 쓸래요!"
         $0.font = Font.bold(size: 16)
@@ -67,30 +70,34 @@ public final class ProfileEditViewController: DisappearKeyBoardBaseViewControlle
     })
     
     private lazy var specializeGuideImageView = UIImageView().then({
-        $0.image = UIImage(named: "common_snackCheck")
+        $0.image = UIImage(named: "common_checkmark")
+        $0.tintColor = DesignSystemAsset.gray700.color
     })
     
     private lazy var specializeGuidLabel = UILabel().then({
         $0.font = Font.regular(size: 14)
         $0.text = "입력된 특수문자가 없어요."
+        $0.textColor = DesignSystemAsset.gray700.color
     })
     
     private lazy var countGuideImageView = UIImageView().then({
-        $0.image = UIImage(named: "common_snackCheck")
+        $0.image = UIImage(named: "common_checkmark")
+        $0.tintColor = DesignSystemAsset.gray700.color
     })
     
     private lazy var countGuideLabel = UILabel().then({
         $0.font = Font.regular(size: 14)
         $0.text = "적절한 글자수의 닉네임이에요."
+        $0.textColor = DesignSystemAsset.gray700.color
     })
     
-    private lazy var nextButton = UIButton().then {
-        $0.backgroundColor = UIColor(red: 255/255, green: 182/255, blue: 2/255, alpha: 1)
-        $0.titleLabel?.font = Font.bold(size: 16)
-        $0.layer.cornerRadius = CGFloat(12)
-        $0.setTitle("완료", for: .normal)
-        $0.setTitleColor(DesignSystemAsset.gray200.color, for: .normal)
-        $0.isEnabled = true
+    public lazy var nextButton = IndicatorTouchableView().then {
+        $0.text = "다음"
+        $0.textColor = DesignSystemAsset.gray300.color
+        $0.backgroundColor = DesignSystemAsset.gray100.color
+        $0.layer.cornerRadius = moderateScale(number: 12)
+        $0.clipsToBounds = true
+        $0.isUserInteractionEnabled = false
     }
     
     public override func viewDidLoad() {
@@ -100,6 +107,30 @@ public final class ProfileEditViewController: DisappearKeyBoardBaseViewControlle
         addViews()
         makeConstraints()
         setupIfNeeded()
+        bind()
+    }
+    
+    private func bind() {
+        viewModel.randomNicknamePublisher()
+            .sink { [weak self] response in
+                guard let self = self else { return }
+                self.userNameTextField.text = response
+                specializeGuideImageView.image = UIImage(named: "checkmark")
+                specializeGuidLabel.textColor = UIColor(red: 127/255, green: 239/255, blue: 118/255, alpha: 1)
+                countGuideImageView.image = UIImage(named: "checkmark")
+                countGuideLabel.textColor = UIColor(red: 127/255, green: 239/255, blue: 118/255, alpha: 1)
+                
+                self.nextButton.textColor = DesignSystemAsset.gray200.color
+                self.nextButton.backgroundColor = DesignSystemAsset.main.color
+                self.nextButton.isUserInteractionEnabled = true
+            }.store(in: &cancelBag)
+        
+        viewModel.setUserNamePublisher()
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                NotificationCenter.default.post(name: NSNotification.Name("ProfileIsChanged"), object: nil)
+                self.navigationController?.popViewController(animated: true)
+            }.store(in: &cancelBag)
     }
     
     public override func addViews() {
@@ -191,15 +222,50 @@ public final class ProfileEditViewController: DisappearKeyBoardBaseViewControlle
         }
         modifyProfileLabel.setOpaqueTapGestureRecognizer { [weak self] in
             self?.showCameraBottomSheet(selectCameraCompletion: self?.openCamera,
-                                       selectAlbumCompletion: nil,
-                                       baseCompletion: nil)
+                                        selectAlbumCompletion: nil,
+                                        baseCompletion: nil)
+        }
+        resetTouchableLabel.setOpaqueTapGestureRecognizer { [weak self] in
+            guard let self = self else { return }
+            self.viewModel.getRandomNickname()
+        }
+        nextButton.setOpaqueTapGestureRecognizer { [weak self] in
+            guard let self = self else { return }
+            // TODO: - validation 검증로직 추가 통과 안되면 nextButton 비활성화
+            self.viewModel.setNickname(userNameTextField.text!)
         }
     }
     
+    @objc private func clearButtonDidTap() {
+        userNameTextField.text = ""
+    }
+    
+    @objc private func textFieldDidChange(_ sender: UITextField) {
+        guard let text = sender.text else { return }
+        let containsSpecialCharacters = text.range(of: "[^a-zA-Z가-힣ㄱ-ㅎㅏ-ㅣ0-9\\s]", options: .regularExpression) != nil
+        let hasValidLength = (1...10).contains(text.count)
+        
+        specializeGuideImageView.image = containsSpecialCharacters ? UIImage(named: "common_checkmark") : UIImage(named: "checkmark")
+        specializeGuidLabel.textColor = containsSpecialCharacters ? DesignSystemAsset.gray700.color : UIColor(red: 127/255, green: 239/255, blue: 118/255, alpha: 1)
+        countGuideImageView.image = hasValidLength ? UIImage(named: "checkmark") : UIImage(named: "common_checkmark")
+        countGuideLabel.textColor = hasValidLength ? UIColor(red: 127/255, green: 239/255, blue: 118/255, alpha: 1) :  DesignSystemAsset.gray700.color
+        
+        if !containsSpecialCharacters && hasValidLength {
+            nextButton.textColor = DesignSystemAsset.gray200.color
+            nextButton.backgroundColor = DesignSystemAsset.main.color
+            nextButton.isUserInteractionEnabled = true
+        } else {
+            nextButton.textColor = DesignSystemAsset.gray300.color
+            nextButton.backgroundColor = DesignSystemAsset.gray100.color
+            nextButton.isUserInteractionEnabled = false
+        }
+        
+    }
+    
     private func openCamera() {
-        #if targetEnvironment(simulator)
+#if targetEnvironment(simulator)
         fatalError()
-        #endif
+#endif
         // Privacy - Camera Usage Description
         AVCaptureDevice.requestAccess(for: .video) { [weak self] isAuthorized in
             guard isAuthorized else {
@@ -220,42 +286,42 @@ public final class ProfileEditViewController: DisappearKeyBoardBaseViewControlle
     
     func showAlertGoToSetting() {
         let alertController = UIAlertController(
-          title: "현재 카메라 사용에 대한 접근 권한이 없습니다.",
-          message: "설정 > {앱 이름}탭에서 접근을 활성화 할 수 있습니다.",
-          preferredStyle: .alert
+            title: "현재 카메라 사용에 대한 접근 권한이 없습니다.",
+            message: "설정 > {앱 이름}탭에서 접근을 활성화 할 수 있습니다.",
+            preferredStyle: .alert
         )
         let cancelAlert = UIAlertAction(
-          title: "취소",
-          style: .cancel
+            title: "취소",
+            style: .cancel
         ) { _ in
             alertController.dismiss(animated: true, completion: nil)
-          }
-        let goToSettingAlert = UIAlertAction(
-          title: "설정으로 이동하기",
-          style: .default) { _ in
-            guard
-              let settingURL = URL(string: UIApplication.openSettingsURLString),
-              UIApplication.shared.canOpenURL(settingURL)
-            else { return }
-            UIApplication.shared.open(settingURL, options: [:])
-          }
-        [cancelAlert, goToSettingAlert]
-          .forEach(alertController.addAction(_:))
-        DispatchQueue.main.async {
-          self.present(alertController, animated: true) // must be used from main thread only
         }
-      }
+        let goToSettingAlert = UIAlertAction(
+            title: "설정으로 이동하기",
+            style: .default) { _ in
+                guard
+                    let settingURL = URL(string: UIApplication.openSettingsURLString),
+                    UIApplication.shared.canOpenURL(settingURL)
+                else { return }
+                UIApplication.shared.open(settingURL, options: [:])
+            }
+        [cancelAlert, goToSettingAlert]
+            .forEach(alertController.addAction(_:))
+        DispatchQueue.main.async {
+            self.present(alertController, animated: true) // must be used from main thread only
+        }
+    }
 }
 extension ProfileEditViewController: UINavigationControllerDelegate, UIImagePickerControllerDelegate {
     public func imagePickerController(
-    _ picker: UIImagePickerController,
-    didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
-  ) {
-    guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else {
-      picker.dismiss(animated: true)
-      return
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
+    ) {
+        guard let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage else {
+            picker.dismiss(animated: true)
+            return
+        }
+        self.profileTouchableImageView.image = image
+        picker.dismiss(animated: true, completion: nil)
     }
-    self.profileTouchableImageView.image = image
-    picker.dismiss(animated: true, completion: nil)
-  }
 }

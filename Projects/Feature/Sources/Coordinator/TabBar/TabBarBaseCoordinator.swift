@@ -27,7 +27,7 @@ public protocol TabBarBaseCoordinator: Coordinator, CurrentCoordinated {
     var commonCoordinator: CommonBaseCoordinator { get }
     var authCoordinator: AuthBaseCoordinator { get }
     var homeCoordinator: HomeBaseCoordinator { get }
-    var benefitCoordinator: BenefitBaseCoordinator { get }
+    var rankingCoordinator: RankingBaseCoordinator { get }
     var transferCoordinator: TransferBaseCoordinator { get }
     var transferHistoryCoordinator: TransferHistoryBaseCoordinator { get }
     var moreCoordinator: MoreBaseCoordinator { get }

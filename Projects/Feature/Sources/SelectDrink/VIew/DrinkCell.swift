@@ -63,6 +63,11 @@ final class DrinkCell: BaseCollectionViewCell<SnackModel> {
     
     override func bind(_ model: SnackModel) {
         super.bind(model)
+        if let imageUrl = URL(string: model.image) {
+            drinkImageView.kf.setImage(with: imageUrl)
+        } else {
+            drinkImageView.image = UIImage(systemName: "circle.fill")
+        }
         drinkNameLabel.text = model.name
     }
     

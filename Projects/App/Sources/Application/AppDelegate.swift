@@ -8,6 +8,7 @@
 import KakaoSDKCommon
 import GoogleSignIn
 import UIKit
+import Service
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -28,6 +29,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         options: UIScene.ConnectionOptions
     ) -> UISceneConfiguration {
         return UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
+    }
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+        UserDefaultsUtil.shared.remove(.feedContent)
+        UserDefaultsUtil.shared.remove(.feedTitle)
     }
 
     func application(

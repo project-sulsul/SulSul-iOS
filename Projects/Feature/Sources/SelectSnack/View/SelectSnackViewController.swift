@@ -15,7 +15,7 @@ protocol SearchSnack: AnyObject {
 
 public final class SelectSnackViewController: BaseViewController {
     
-    var coordinator: AuthBaseCoordinator?
+    var coordinator: Coordinator?
     private let viewModel: SelectSnackViewModel
     private lazy var cancelBag = Set<AnyCancellable>()
     
@@ -31,7 +31,6 @@ public final class SelectSnackViewController: BaseViewController {
     private lazy var noFindSnackButton = UIButton().then {
         $0.setTitle("찾는 안주가 없어요", for: .normal)
         $0.titleLabel?.font = Font.semiBold(size: 14)
-        $0.addTarget(self, action: #selector(didTabBackButton), for: .touchUpInside)
     }
     
     private lazy var resultEmptyView = SearchResultEmptyView().then {
@@ -118,11 +117,18 @@ public final class SelectSnackViewController: BaseViewController {
     }
     
     public override func viewDidLoad() {
+        self.tabBarController?.setTabBarHidden(true)
         view.backgroundColor = DesignSystemAsset.black.color
         overrideUserInterfaceStyle = .dark
 
         addViews()
         makeConstraints()
+        bind()
+        
+        noFindSnackButton.onTapped { [weak self] in
+            let vc = AddSnackViewController()
+            self?.navigationController?.pushViewController(vc, animated: true)
+        }
     }
     
     public override func addViews() {
@@ -212,12 +218,24 @@ public final class SelectSnackViewController: BaseViewController {
         }
     }
     
+    private func bind() {
+        viewModel.completeSnackPreferencePublisher()
+            .sink { [weak self] in
+                guard let self = self else { return }
+                if let authCoordinator = self.coordinator as? AuthCoordinator {
+                    authCoordinator.moveTo(appFlow: TabBarFlow.auth(.profileInput(.selectComplete)), userData: nil)
+                } else if let moreCoordinator = self.coordinator as? MoreCoordinator {
+                    self.navigationController?.popViewController(animated: true)
+                }
+            }.store(in: &cancelBag)
+    }
+    
     @objc private func didTabAddSnackButton() {
         
     }
     
     @objc private func didTabBackButton() {
-        
+        self.navigationController?.popViewController(animated: true)
     }
     
     @objc private func didTabNoFindSnackButton() {
@@ -225,7 +243,7 @@ public final class SelectSnackViewController: BaseViewController {
     }
     
     @objc private func didTabNextButton() {
-        
+        self.viewModel.sendSetUserSnackPreference()
     }
 }
 

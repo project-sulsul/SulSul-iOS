@@ -45,24 +45,26 @@ enum TabBarFlow: Flow {
     case auth(AuthFlow)
     case common(CommonScene)
     case home(HomeScene)
-    case benefit(BenefitScene)
+    case ranking(RankingScene)
     case transfer(TransferScene)
     case transferHistory(TransferHistoryScene)
     case more(ProfileScene)
 }
 
 enum AuthFlow: Flow {
-//    case login(LoginScene)
-//    case signUp(SignUpScene)
-//    case findEmail(FindEmailScene)
-//    case findPassword(FindPasswordScene)
+    case login
     case profileInput(ProfileInputScene)
-//    case simplePasswordSetting
-//    case simplePasswordLogin
 }
 
 enum CommonScene {
     case web
+    case selectPhoto
+    case writePostText
+    case writeContent
+    case reportContent
+    case search
+    case comment
+    case feedDetail
 }
 
 enum LoginScene {
@@ -100,8 +102,14 @@ enum HomeScene {
     case main
 }
 
-enum BenefitScene {
+// MARK: - 랭킹페이지
+
+enum RankingScene {
     case main
+    case search
+    case alarm
+    case detailDrink
+    case detailCombination
 }
 
 enum TransferScene {
@@ -113,8 +121,10 @@ enum TransferHistoryScene {
 }
 
 enum ProfileInputScene {
+    case setUserName
     case selectDrink
     case selectSnack
+    case selectComplete
 }
 
 // MARK: - 마이페이지
@@ -122,6 +132,8 @@ enum ProfileScene {
     case main
     case profileSetting
     case profileEdit
+    case selectDrink
+    case selectSnack
 }
 
 enum ProfileManagementScene {

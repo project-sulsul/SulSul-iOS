@@ -66,7 +66,7 @@ public final class ToastMessageView: UIView {
     private func makeConstraints() {
         backgroundView.snp.makeConstraints {
             $0.centerX.equalToSuperview()
-            $0.bottom.equalToSuperview().offset(moderateScale(number: -80))
+            $0.bottom.equalToSuperview()
         }
         toastImageView.snp.makeConstraints {
             $0.leading.equalToSuperview().offset(moderateScale(number: 16))

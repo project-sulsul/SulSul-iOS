@@ -10,7 +10,7 @@ import DesignSystem
 
 enum TabType: Int {
     case home
-    case benefit
+    case ranking
     case transfer
     case transferHistory
     case more
@@ -24,7 +24,7 @@ final class TabBarCoordinator: NSObject, TabBarBaseCoordinator {
     var commonCoordinator: CommonBaseCoordinator = CommonCoordinator()
     var authCoordinator: AuthBaseCoordinator = AuthCoordinator()
     var homeCoordinator: HomeBaseCoordinator = HomeCoordinator()
-    var benefitCoordinator: BenefitBaseCoordinator = BenefitCoordinator()
+    var rankingCoordinator: RankingBaseCoordinator = RankingCoordinator()
     var transferCoordinator: TransferBaseCoordinator = TransferCoordinator()
     var transferHistoryCoordinator: TransferHistoryBaseCoordinator = TransferHistoryCoordinator()
     var moreCoordinator: MoreBaseCoordinator = MoreCoordinator()
@@ -34,12 +34,11 @@ final class TabBarCoordinator: NSObject, TabBarBaseCoordinator {
         homeCoordinator.parentCoordinator = self
         homeVC.tabBarItem = UITabBarItem(title: "홈", image: UIImage(named: "tabBar_home"), selectedImage: UIImage(named: "tabBar_selectHome"))
         
-        let benefitVC = benefitCoordinator.start()
-        benefitCoordinator.parentCoordinator = self
-        benefitVC.tabBarItem = UITabBarItem(title: "랭킹", image: UIImage(named: "tabBar_ranking"), selectedImage: UIImage(named: "tabBar_selectRanking"))
+        let rankingVC = rankingCoordinator.start()
+        rankingCoordinator.parentCoordinator = self
+        rankingVC.tabBarItem = UITabBarItem(title: "랭킹", image: UIImage(named: "tabBar_ranking"), selectedImage: UIImage(named: "tabBar_selectRanking"))
         
         let transferVC = transferCoordinator.start()
-        transferCoordinator.parentCoordinator = self
         transferVC.tabBarItem = UITabBarItem(title: "새 피드 작성", image: UIImage(named: "tabBar_newFeed"), selectedImage: nil)
         
         let transferHistoryVC = transferHistoryCoordinator.start()
@@ -53,7 +52,7 @@ final class TabBarCoordinator: NSObject, TabBarBaseCoordinator {
         let rootTabBar = rootViewController as? UITabBarController
         rootTabBar?.delegate = self
         rootTabBar?.viewControllers = [homeVC,
-                                       benefitVC,
+                                       rankingVC,
                                        transferVC,
                                        transferHistoryVC,
                                        moreVC]
@@ -69,7 +68,7 @@ final class TabBarCoordinator: NSObject, TabBarBaseCoordinator {
         authCoordinator.parentCoordinator = self
         authCoordinator.currentFlowManager = currentFlowManager
         
-        benefitCoordinator.currentFlowManager = currentFlowManager
+        rankingCoordinator.currentFlowManager = currentFlowManager
         
         transferCoordinator.currentFlowManager = currentFlowManager
         
@@ -92,10 +91,10 @@ final class TabBarCoordinator: NSObject, TabBarBaseCoordinator {
         switch tabBarFlow {
         case .home:
             startHomeFlow(tabBarFlow, userData: userData)
-        case .benefit:
+        case .ranking:
             startBenefitFlow(tabBarFlow, userData: userData)
         case .transfer:
-            startTransferFlow(tabBarFlow, userData: userData)
+            startCommonFlow(tabBarFlow, userData: userData)
         case .transferHistory:
             startTransferHistoryFlow(tabBarFlow, userData: userData)
         case .more:
@@ -114,15 +113,9 @@ final class TabBarCoordinator: NSObject, TabBarBaseCoordinator {
     }
     
     private func startBenefitFlow(_ flow: Flow, userData: [String: Any]?) {
-        currentFlowManager?.currentCoordinator = benefitCoordinator
-        (rootViewController as? UITabBarController)?.selectedIndex = TabType.benefit.rawValue
-        benefitCoordinator.moveTo(appFlow: flow, userData: userData)
-    }
-    
-    private func startTransferFlow(_ flow: Flow, userData: [String: Any]?) {
-        currentFlowManager?.currentCoordinator = transferCoordinator
-        (rootViewController as? UITabBarController)?.selectedIndex = TabType.transfer.rawValue
-        transferCoordinator.moveTo(appFlow: flow, userData: userData)
+        currentFlowManager?.currentCoordinator = rankingCoordinator
+        (rootViewController as? UITabBarController)?.selectedIndex = TabType.ranking.rawValue
+        rankingCoordinator.moveTo(appFlow: flow, userData: userData)
     }
     
     private func startTransferHistoryFlow(_ flow: Flow, userData: [String: Any]?) {
@@ -162,8 +155,8 @@ extension TabBarCoordinator: UITabBarControllerDelegate {
             currentFlowManager?.currentCoordinator = homeCoordinator
         case .more:
             currentFlowManager?.currentCoordinator = moreCoordinator
-        case .benefit:
-            currentFlowManager?.currentCoordinator = benefitCoordinator
+        case .ranking:
+            currentFlowManager?.currentCoordinator = rankingCoordinator
         case .transfer:
             currentFlowManager?.currentCoordinator = transferCoordinator
         case .transferHistory:
@@ -178,8 +171,16 @@ extension TabBarCoordinator: UITabBarControllerDelegate {
         }
         
         switch tabType {
-        case .home, .benefit, .transfer, .transferHistory, .more:
+//<<<<<<< HEAD
+        case .home, .ranking, .transferHistory, .more:
+//=======
+//        case .home, .benefit, .transferHistory, .more:
+//>>>>>>> feature/1.0.0
             return true
+
+        case .transfer:
+            startCommonFlow(TabBarFlow.common(.selectPhoto), userData: nil)
+            return false
         }
     }
 }

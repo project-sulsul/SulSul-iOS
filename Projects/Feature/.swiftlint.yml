@@ -2,3 +2,4 @@
 disabled_rules:
   - trailing_whitespace                    # 후행 공백 (선행 공백과 더불어 필요없다고 미
   - line_length
+  - identifier_name
