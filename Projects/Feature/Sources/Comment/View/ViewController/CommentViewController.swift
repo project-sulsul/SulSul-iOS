@@ -19,6 +19,34 @@ public final class CommentViewController: BaseHeaderViewController {
     
     private lazy var commentCountView = UIView()
     
+    private lazy var replyBackView = UIView().then {
+        $0.backgroundColor = DesignSystemAsset.black.color
+        $0.isHidden = true
+    }
+    
+    private lazy var replyNameLabel = PaddedLabel(padding: UIEdgeInsets(top: 1,
+                                                                        left: 4,
+                                                                        bottom: 1,
+                                                                        right: 4)).then {
+        $0.font = Font.regular(size: 10)
+        $0.textColor = DesignSystemAsset.gray900.color
+        $0.backgroundColor = DesignSystemAsset.gray200.color
+        $0.layer.cornerRadius = moderateScale(number: 4)
+        $0.clipsToBounds = true
+    }
+    
+    private lazy var replySubLabel = UILabel().then {
+        $0.font = Font.regular(size: 12)
+        $0.textColor = DesignSystemAsset.gray900.color
+        $0.text = "님 에게 답글 남기는 중..."
+    }
+    
+    private lazy var replyCancelLabel = UILabel().then {
+        $0.font = Font.regular(size: 12)
+        $0.textColor = DesignSystemAsset.main.color
+        $0.text = "취소"
+    }
+    
     private lazy var commentImageView = UIImageView().then {
         $0.image = UIImage(named: "comment_comment")
     }
@@ -113,6 +141,11 @@ public final class CommentViewController: BaseHeaderViewController {
                                                    parentId: selfRef.parentId)
             }
         }
+        
+        replyCancelLabel.onTapped { [weak self] in
+            self?.replyBackView.isHidden = true
+            self?.parentId = 0
+        }
     }
     
     public override func addViews() {
@@ -121,7 +154,8 @@ public final class CommentViewController: BaseHeaderViewController {
         view.addSubviews([
             commentCountView,
             commentTableView,
-            commentInputView
+            commentInputView,
+            replyBackView
         ])
         
         commentCountView.addSubviews([
@@ -134,6 +168,12 @@ public final class CommentViewController: BaseHeaderViewController {
         commentTextFieldView.addSubviews([
             commentTextField,
             submitButton
+        ])
+        
+        replyBackView.addSubviews([
+            replyNameLabel,
+            replySubLabel,
+            replyCancelLabel
         ])
     }
     
@@ -161,6 +201,27 @@ public final class CommentViewController: BaseHeaderViewController {
             $0.top.equalTo(commentCountView.snp.bottom)
             $0.bottom.equalToSuperview().inset(moderateScale(number: 90))
             $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 20))
+        }
+        
+        replyBackView.snp.makeConstraints {
+            $0.width.centerX.equalToSuperview()
+            $0.bottom.equalTo(commentInputView.snp.top)
+            $0.height.equalTo(moderateScale(number: 34))
+        }
+        
+        replyNameLabel.snp.makeConstraints {
+            $0.leading.equalToSuperview().inset(moderateScale(number: 12))
+            $0.centerY.equalToSuperview()
+        }
+        
+        replySubLabel.snp.makeConstraints {
+            $0.leading.equalTo(replyNameLabel.snp.trailing).offset(moderateScale(number: 2))
+            $0.centerY.equalToSuperview()
+        }
+        
+        replyCancelLabel.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.trailing.equalToSuperview().inset(moderateScale(number: 12))
         }
         
         commentInputView.snp.makeConstraints {
@@ -212,6 +273,8 @@ extension CommentViewController: UITableViewDelegate, UITableViewDataSource {
         cell.replayLabel.onTapped { [weak self] in
             self?.parentId = comment.comment_id
             self?.commentTextField.becomeFirstResponder()
+            self?.replyBackView.isHidden = false
+            self?.replyNameLabel.text = comment.user_info.nickname
         }
         
         cell.moreButton.onTapped { [weak self] in
