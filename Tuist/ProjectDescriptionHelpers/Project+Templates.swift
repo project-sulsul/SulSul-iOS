@@ -80,7 +80,7 @@ extension Project {
                     platform: .iOS,
                     product: product,
                     bundleId: bundleID,
-                    deploymentTarget: .iOS(targetVersion: iosVersion, devices: [.iphone, .ipad]),
+                    deploymentTarget: .iOS(targetVersion: iosVersion, devices: [.iphone]),
                     infoPlist: infoPlist,
                     sources: sources,
                     resources: resources,
