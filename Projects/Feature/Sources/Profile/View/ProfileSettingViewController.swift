@@ -167,11 +167,11 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
         }
         termsSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
             guard let self = self else { return }
-            self.coordinator?.moveTo(appFlow: TabBarFlow.common(.web), userData: ["url": URL(string: "https://www.naver.com")])
+            self.coordinator?.moveTo(appFlow: TabBarFlow.common(.web), userData: ["url": URL(string: "https://mopil1102.notion.site/51b45ca9663843f89174798fb6f725e2?pvs=4")])
         }
         personalSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
             guard let self = self else { return }
-            self.coordinator?.moveTo(appFlow: TabBarFlow.common(.web), userData: ["url": URL(string: "https://www.google.com")])
+            self.coordinator?.moveTo(appFlow: TabBarFlow.common(.web), userData: ["url": URL(string: "https://mopil1102.notion.site/eadb2ee65a114940bae603e898dd21f0?pvs=4")])
         }
         signOutSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
             guard let self = self else { return }
