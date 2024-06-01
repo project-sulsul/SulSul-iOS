@@ -397,6 +397,10 @@ extension FeedDetailViewController {
         )
     }
     
+    private func blockUser() {
+        
+    }
+    
     private func reportFeed() {
         let viewModel = ReportViewModel(reportType: .feed, targetId: feedID)
         let viewController = ReportViewController(viewModel: viewModel,
@@ -572,6 +576,10 @@ extension FeedDetailViewController: FeedDetailMenuBottomSheetDelegate {
     
     func didTapDeleteFeedView() {
         self.deleteFeed()
+    }
+    
+    func didTapBlockUserView() {
+        self.blockUser()
     }
     
     func didTapReportFeedView() {

@@ -11,6 +11,7 @@ import DesignSystem
 protocol FeedDetailMenuBottomSheetDelegate: AnyObject {
     func didTapEditFeedView()
     func didTapDeleteFeedView()
+    func didTapBlockUserView()
     func didTapReportFeedView()
 }
 
@@ -44,6 +45,11 @@ final class FeedDetailMenuBottomSheet: UIView {
         $0.image = UIImage(named: "delete_feed")
     }
     
+    private lazy var blockUserImageView = UIImageView().then {
+        $0.image = UIImage(systemName: "nosign")
+        $0.tintColor = DesignSystemAsset.gray900.color
+    }
+    
     private lazy var reportFeedImageView = UIImageView().then {
         $0.image = UIImage(named: "report_feed")
     }
@@ -57,6 +63,12 @@ final class FeedDetailMenuBottomSheet: UIView {
     private lazy var deleteFeedLabel = UILabel().then {
         $0.text = "게시글 삭제하기"
         $0.textColor = DesignSystemAsset.red050.color
+        $0.font = Font.medium(size: 16)
+    }
+    
+    private lazy var blockUserLabel = UILabel().then {
+        $0.text = "차단하기"
+        $0.textColor = DesignSystemAsset.gray900.color
         $0.font = Font.medium(size: 16)
     }
     
@@ -104,8 +116,8 @@ extension FeedDetailMenuBottomSheet {
         self.containerView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 10))
             $0.bottom.equalToSuperview().inset(moderateScale(number: 28))
-//            $0.height.equalTo(sheetType == .mine ? moderateScale(number: 116) : moderateScale(number: 68))
-            $0.height.equalTo(moderateScale(number: 68))
+            $0.height.equalTo(sheetType == .mine ? moderateScale(number: 68) : moderateScale(number: 116))
+//            $0.height.equalTo(moderateScale(number: 68))
         }
     }
     
@@ -131,12 +143,19 @@ extension FeedDetailMenuBottomSheet {
                 deleteFeedView
             ])
         case .someone:
+            let blockUserView = createOptionView(imageView: self.blockUserImageView, label: self.blockUserLabel) { [weak self] in
+                self?.delegate?.didTapBlockUserView()
+                self?.removeFromSuperview()
+            }
             let reportFeedView = createOptionView(imageView: self.reportFeedImageView, label: self.reportFeedLabel) { [weak self] in
                 self?.delegate?.didTapReportFeedView()
                 self?.removeFromSuperview()
             }
             
-            stackView.addArrangedSubview(reportFeedView)
+            stackView.addArrangedSubviews([
+                blockUserView,
+                reportFeedView
+            ])
         }
         
         self.dimmedView.onTapped { [weak self] in

@@ -175,9 +175,8 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
                 self.showAlertView(withType: .oneButton, title: "로그인", description: "해라", submitCompletion: nil, cancelCompletion: nil)
             }
         }
-        feedBackSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
-            guard let self = self,
-                  let url = URL(string: "https://apps.apple.com/us/app/%EC%88%A0%EC%88%A0-sulsul/id6472654324") else { return }
+        feedBackSettingView.containerView.setOpaqueTapGestureRecognizer {
+            guard let url = URL(string: "https://apps.apple.com/us/app/%EC%88%A0%EC%88%A0-sulsul/id6472654324") else { return }
             
             UIApplication.shared.open(url)
         }
