@@ -68,7 +68,7 @@ final class SettingView: UIView {
             $0.edges.equalToSuperview()
         }
         titleLabel.snp.makeConstraints {
-            $0.top.bottom.equalToSuperview().inset(moderateScale(number: 10))
+            $0.top.bottom.equalToSuperview()
             $0.leading.equalToSuperview()
         }
         arrowTouchableImageView.snp.makeConstraints {
