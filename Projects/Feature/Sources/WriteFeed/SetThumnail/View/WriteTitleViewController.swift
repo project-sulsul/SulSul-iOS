@@ -77,7 +77,7 @@ final class WriteTitleViewController: BaseHeaderViewController, CommonBaseCoordi
         $0.numberOfLines = 0
         $0.setLineHeight(24,
                          text: "읽어주세요!\n• 제목과 함께 있는 이미지는 썸네일로 사용돼요.\n• 이미지는 최대 5장 까지만 선택할 수 있어요.",
-                         font:  Font.regular(size: 16))
+                         font: Font.regular(size: 16))
     }
     
     private lazy var noticeView = UIView().then {
@@ -89,7 +89,7 @@ final class WriteTitleViewController: BaseHeaderViewController, CommonBaseCoordi
         
         let label = UILabel()
         label.setLineHeight(18,
-                            text: "서비스와 관련이 없는 부적절한 내용을 작성하는 경우,\n관리자에 의해 자동으로 계정이 차단될 수 있습니다.",
+                            text: "서비스와 관련이 없는 부적절한 내용을 작성하는 경우,\n향후 관리자 조치로 계정 이용이 정지될 수 있습니다.",
                             font: Font.medium(size: 12))
         label.textColor = DesignSystemAsset.white.color
         label.numberOfLines = 0
