@@ -164,7 +164,11 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
             if StaticValues.isLoggedIn.value {
                 self.coordinator?.moveTo(appFlow: TabBarFlow.more(.selectDrink), userData: nil)
             } else {
-                self.showAlertView(withType: .oneButton, title: "로그인", description: "해라", submitCompletion: nil, cancelCompletion: nil)
+                self.showAlertView(withType: .oneButton,
+                                   title: "알림",
+                                   description: "로그인이 필요한 기능이에요.",
+                                   submitCompletion: nil,
+                                   cancelCompletion: nil)
             }
         }
         snackSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
@@ -172,7 +176,23 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
             if StaticValues.isLoggedIn.value {
                 self.coordinator?.moveTo(appFlow: TabBarFlow.more(.selectSnack), userData: nil)
             } else {
-                self.showAlertView(withType: .oneButton, title: "로그인", description: "해라", submitCompletion: nil, cancelCompletion: nil)
+                self.showAlertView(withType: .oneButton,
+                                   title: "알림",
+                                   description: "로그인이 필요한 기능이에요.",
+                                   submitCompletion: nil,
+                                   cancelCompletion: nil)
+            }
+        }
+        blockUserSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
+            guard let self = self else { return }
+            if StaticValues.isLoggedIn.value {
+                self.coordinator?.moveTo(appFlow: TabBarFlow.more(.blockUser), userData: nil)
+            } else {
+                self.showAlertView(withType: .oneButton,
+                                   title: "알림",
+                                   description: "로그인이 필요한 기능이에요.",
+                                   submitCompletion: nil,
+                                   cancelCompletion: nil)
             }
         }
         feedBackSettingView.containerView.setOpaqueTapGestureRecognizer {

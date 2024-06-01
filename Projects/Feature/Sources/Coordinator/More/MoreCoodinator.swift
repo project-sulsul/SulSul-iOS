@@ -70,6 +70,13 @@ final class MoreCoordinator: NSObject, MoreBaseCoordinator {
             writeFeedVC.coordinator = writeFeedCoordinator
             
             currentNavigationViewController?.pushViewController(writeFeedVC, animated: true)
+        case .blockUser:
+            let viewModel = BlockUserViewModel()
+            let blockUserVC = BlockUserViewController(viewModel: viewModel)
+            
+            blockUserVC.coordinator = self
+            currentNavigationViewController?.interactivePopGestureRecognizer?.isEnabled = true
+            currentNavigationViewController?.pushViewController(blockUserVC, animated: true)
         }
     }
 }
