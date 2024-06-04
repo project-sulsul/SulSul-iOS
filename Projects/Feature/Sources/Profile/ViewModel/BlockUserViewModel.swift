@@ -8,12 +8,13 @@
 import Foundation
 import Combine
 import Service
+import Alamofire
 
 final class BlockUserViewModel {
     private let jsonDecoder = JSONDecoder()
     private let networkWrapper = NetworkWrapper.shared
     private var cancelBag = Set<AnyCancellable>()
-    private var isUnblocked = CurrentValueSubject<Bool, Never>(false)
+    private var isUnblocked = PassthroughSubject<Bool, Never>()
     
     var blockUsers: [BlockUser] = []
     
@@ -30,15 +31,28 @@ final class BlockUserViewModel {
 //
 extension BlockUserViewModel {
     public func requestUnblockUser(_ userId: Int) {
-        networkWrapper.deleteBasicTask(stringURL: "/users/\(userId)/block") { [weak self] result in
+        var headers: HTTPHeaders? = nil
+        
+        if UserDefaultsUtil.shared.isLogin() {
+            guard let accessToken = KeychainStore.shared.read(label: "accessToken")
+            else { return }
+            debugPrint("\(#function): User accessToken is \(accessToken)")
+            
+            headers = [
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + accessToken
+            ]
+        }
+        
+        networkWrapper.deleteBasicTask(stringURL: "/users/\(userId)/block", header: headers) { [weak self] result in
             guard let self = self else { return }
             
             switch result {
-            case .success(let response):
+            case .success:
                 self.isUnblocked.send(true)
                 debugPrint("\(#function) -- Request succeed.")
             case .failure(let error):
-                debugPrint("\(#function) -- Request failed. Reason is \(error.localizedDescription)")
+                debugPrint("\(#function) -- Request failed. Reason is \(error)")
             }
         }
     }

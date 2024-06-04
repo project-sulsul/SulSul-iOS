@@ -416,8 +416,11 @@ extension FeedDetailViewController {
                         if isBlocked {
                             rootVC?.showToastMessageView(toastType: .success, title: "사용자를 차단했어요.", inset: 64)
                             
+                            rootVC?.loadViewIfNeeded()
+                            
                             self.navigationController?.popViewController(animated: true)
-                        } else {
+                        }
+                        if !isBlocked {
                             self.showToastMessageView(toastType: .error, title: "사용자를 차단하는 도중 오류가 발생했어요.", inset: 64)
                         }
                     }

@@ -26,10 +26,15 @@ final class BlockUserCell: UITableViewCell {
     
     private lazy var userNameLabel = UILabel()
     
-    private lazy var unblockTouchableView = TouchableView()
+    lazy var unblockTouchableView = TouchableView()
+    
+    private lazy var blockLabel = UILabel().then {
+        $0.setLineHeight(20, text: "차단됨", font: Font.regular(size: 12))
+        $0.textColor = DesignSystemAsset.red050.color
+    }
     
     private lazy var unblockLabel = UILabel().then {
-        $0.setLineHeight(20, text: "차단해제", font: Font.bold(size: 14))
+        $0.setLineHeight(20, text: "해제하기", font: Font.bold(size: 14))
         $0.isUserInteractionEnabled = true
         $0.textColor = DesignSystemAsset.gray900.color
     }
@@ -74,6 +79,7 @@ extension BlockUserCell {
         self.addSubviews([
             self.userImageView,
             self.userNameLabel,
+            self.blockLabel,
             self.unblockTouchableView
         ])
     }
@@ -86,11 +92,17 @@ extension BlockUserCell {
         }
         self.userNameLabel.snp.makeConstraints {
             $0.leading.equalTo(userImageView.snp.trailing).offset(moderateScale(number: 10))
+            $0.top.bottom.equalToSuperview()
+            $0.centerY.equalToSuperview()
+        }
+        self.blockLabel.snp.makeConstraints {
+            $0.leading.equalTo(userNameLabel.snp.trailing).offset(moderateScale(number: 10))
+            $0.top.bottom.equalTo(self.userNameLabel)
             $0.centerY.equalToSuperview()
         }
         self.unblockTouchableView.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(moderateScale(number: 8))
-            $0.top.bottom.equalToSuperview()
+            $0.top.bottom.equalTo(self.userNameLabel).inset(moderateScale(number: 8))
             $0.centerY.equalToSuperview()
         }
         self.unblockLabel.snp.makeConstraints {

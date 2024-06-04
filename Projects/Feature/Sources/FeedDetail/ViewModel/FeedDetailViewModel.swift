@@ -40,7 +40,7 @@ public final class FeedDetailViewModel {
     /// 피드 삭제 처리 여부
     private var isDeleted = CurrentValueSubject<Bool, Never>(false)
     /// 사용자 차단 여부
-    private var isBlocked = CurrentValueSubject<Bool, Never>(false)
+    private var isBlocked = PassthroughSubject<Bool, Never>()
     /// 현재 피드와 관련된 다른 피드 개수
     private var numberOfRelatedFeed = CurrentValueSubject<Int, Never>(0)
     private var cancelBag = Set<AnyCancellable>()
@@ -89,7 +89,7 @@ extension FeedDetailViewModel {
     }
     
     func isBlockedPublisher() -> AnyPublisher<Bool, Never> {
-        return isDeleted.eraseToAnyPublisher()
+        return isBlocked.eraseToAnyPublisher()
     }
 }
 
@@ -287,7 +287,7 @@ extension FeedDetailViewModel {
                     debugPrint("\(#function) -- Request succeed.")
                 }
             case .failure(let error):
-                debugPrint("\(#function) -- Request failed. Reason is \(error.localizedDescription)")
+                debugPrint("\(#function) -- Request failed. Reason is \(error)")
             }
         }
     }
@@ -302,7 +302,7 @@ extension FeedDetailViewModel {
                     UserDefaultsUtil.shared.setObject(data, forkey: .blockUser)
                 }
             case .failure(let error):
-                debugPrint("\(#function) -- Request failed. Reason is \(error.localizedDescription)")
+                debugPrint("\(#function) -- Request failed. Reason is \(error)")
             }
         }
     }

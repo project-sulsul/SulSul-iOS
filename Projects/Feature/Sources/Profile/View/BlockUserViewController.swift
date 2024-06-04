@@ -22,9 +22,9 @@ final class BlockUserViewController: BaseHeaderViewController {
         $0.dataSource = self
         $0.delegate = self
         $0.backgroundColor = .clear
-        $0.isUserInteractionEnabled = true
         $0.rowHeight = 50
-        $0.separatorStyle = .none
+        $0.separatorStyle = .singleLine
+        $0.separatorColor = DesignSystemAsset.gray200.color
     }
     
     // MARK: Override methods
@@ -76,34 +76,24 @@ final class BlockUserViewController: BaseHeaderViewController {
 //
 extension BlockUserViewController {
     private func unblockUser(at indexPath: IndexPath) {
-        self.showAlertView(
-            withType: .twoButton,
-            title: "차단을 해제할까요?",
-            description: "차단을 해제하면 이 사용자의 게시물을 볼 수 있어요.",
-            submitText: "해제하기",
-            submitCompletion: { [weak self] in
-                guard let self = self else { return }
-                
-                let user = self.viewModel.blockUsers[indexPath.row]
-                
-                self.viewModel.requestUnblockUser(user.id)
-                
-                self.viewModel.isUnblockedPublisher()
-                    .receive(on: DispatchQueue.main)
-                    .sink { [weak self] isUnblocked in
-                        if isUnblocked {
-                            self?.viewModel.deleteBlockUser(user)
-                            self?.tableView.reloadData()
-                            
-                            self?.showToastMessageView(toastType: .success, title: "차단을 해제했어요.", inset: 64)
-                        } else {
-                            self?.showToastMessageView(toastType: .error, title: "차단해제 하는 도중 오류가 발생했어요.", inset: 64)
-                        }
-                    }
-                    .store(in: &self.cancelBag)
-            },
-            cancelCompletion: nil
-        )
+        let user = self.viewModel.blockUsers[indexPath.row]
+        
+        self.viewModel.requestUnblockUser(user.id)
+        
+        self.viewModel.isUnblockedPublisher()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isUnblocked in
+                if isUnblocked {
+                    self?.viewModel.deleteBlockUser(user)
+                    
+                    self?.showToastMessageView(toastType: .success, title: "차단을 해제했어요.", inset: 64)
+                    self?.tableView.reloadData()
+                }
+                if !isUnblocked {
+                    self?.showToastMessageView(toastType: .error, title: "차단해제 하는 도중 오류가 발생했어요.", inset: 64)
+                }
+            }
+            .store(in: &self.cancelBag)
     }
 }
 
@@ -129,6 +119,10 @@ extension BlockUserViewController: UITableViewDataSource {
 extension BlockUserViewController: UITableViewDelegate {
     func numberOfSections(in tableView: UITableView) -> Int {
         return 1
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        self.unblockUser(at: indexPath)
     }
 }
 
