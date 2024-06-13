@@ -23,21 +23,16 @@ public final class SetNicknameViewController: HiddenTabBarBaseViewController {
     //
     private lazy var topHeaderView = UIView()
     
-    private lazy var defaultStackView = ValidationLabelStackView().then {
-        $0.axis = .horizontal
-        $0.spacing = CGFloat(6)
-    }
-    
     private lazy var specialCharactersStackView = ValidationLabelStackView().then {
         $0.axis = .horizontal
         $0.spacing = CGFloat(6)
-        $0.isHidden = true
+        $0.configure(to: .common, "특수문자 사용은 안돼요.")
     }
     
     private lazy var lessThanCharactersStackView = ValidationLabelStackView().then {
         $0.axis = .horizontal
         $0.spacing = CGFloat(6)
-        $0.isHidden = true
+        $0.configure(to: .common, "한글/영문, 숫자 포함 10자로 사용 가능해요.")
     }
     
     private lazy var induceUserNameLabel = UILabel().then {
@@ -63,30 +58,6 @@ public final class SetNicknameViewController: HiddenTabBarBaseViewController {
     private lazy var clearButton = UIButton().then {
         $0.addTarget(self, action: #selector(clearButtonDidTap), for: .touchUpInside)
         $0.setImage(UIImage(named: "filled_clear"), for: .normal)
-    }
-    
-    private lazy var generateButton = UIButton().then {
-        $0.addTarget(self, action: #selector(generateButtonDidTap), for: .touchUpInside)
-        $0.backgroundColor = DesignSystemAsset.gray300.color
-        $0.titleLabel?.font = Font.bold(size: 16)
-        $0.titleLabel?.textColor = DesignSystemAsset.gray700.color
-        $0.layer.cornerRadius = CGFloat(8)
-        $0.setTitle("다른거 할래요", for: .normal)
-    }
-    
-    private lazy var resetButton = UIButton().then {
-        var attributeContainer = AttributeContainer()
-        attributeContainer.font = Font.bold(size: 16)
-        
-        var configuration = UIButton.Configuration.plain()
-        configuration.background.backgroundColor = .clear
-        configuration.attributedTitle = AttributedString("랜덤 닉네임 쓸래요!", attributes: attributeContainer)
-        
-        $0.addTarget(self, action: #selector(resetButtonDidTap), for: .touchUpInside)
-        $0.configuration = configuration
-        $0.contentMode = .center
-        $0.isHidden = true
-        $0.tintColor = DesignSystemAsset.gray400.color
     }
     
     private lazy var nextButton = UIButton().then {
@@ -121,8 +92,6 @@ public final class SetNicknameViewController: HiddenTabBarBaseViewController {
             self?.navigationController?.popViewController(animated: true)
         }
         
-        viewModel.requestRandomNickname()
-        
         bind()
         addViews()
         makeConstraints()
@@ -144,8 +113,8 @@ public final class SetNicknameViewController: HiddenTabBarBaseViewController {
     
     public override func addViews() {
         topHeaderView.addSubviews([backButton, induceUserNameLabel])
-        view.addSubviews([topHeaderView, userNameTextField, defaultStackView, specialCharactersStackView,
-                          lessThanCharactersStackView, generateButton, resetButton, nextButton])
+        view.addSubviews([topHeaderView, userNameTextField, specialCharactersStackView,
+                          lessThanCharactersStackView, nextButton])
     }
     
     public override func makeConstraints() {
@@ -168,10 +137,6 @@ public final class SetNicknameViewController: HiddenTabBarBaseViewController {
             $0.leading.trailing.equalTo(topHeaderView)
             $0.top.equalTo(topHeaderView.snp.bottom).offset(moderateScale(number: 28))
         }
-        defaultStackView.snp.makeConstraints {
-            $0.leading.equalTo(userNameTextField)
-            $0.top.equalTo(userNameTextField.snp.bottom).offset(8)
-        }
         specialCharactersStackView.snp.makeConstraints {
             $0.leading.equalTo(userNameTextField)
             $0.top.equalTo(userNameTextField.snp.bottom).offset(8)
@@ -179,18 +144,6 @@ public final class SetNicknameViewController: HiddenTabBarBaseViewController {
         lessThanCharactersStackView.snp.makeConstraints {
             $0.leading.equalTo(specialCharactersStackView)
             $0.top.equalTo(specialCharactersStackView.snp.bottom).offset(8)
-        }
-        generateButton.snp.makeConstraints {
-            $0.trailing.equalTo(userNameTextField)
-            $0.top.equalTo(defaultStackView.snp.bottom).offset(16)
-            $0.width.equalTo(moderateScale(number: 135))
-            $0.height.equalTo(moderateScale(number: 40))
-        }
-        resetButton.snp.makeConstraints {
-            $0.bottom.equalTo(nextButton.snp.top).offset(-24)
-            $0.width.equalTo(171)
-            $0.height.equalTo(32)
-            $0.centerX.equalTo(nextButton)
         }
         nextButton.snp.makeConstraints {
             $0.leading.trailing.equalTo(topHeaderView).inset(moderateScale(number: 20))
@@ -254,13 +207,11 @@ extension SetNicknameViewController {
         guard let userName = text else { return }
         let containsSpecialCharacters = userName.range(of: "[^a-zA-Z가-힣ㄱ-ㅎㅏ-ㅣ0-9\\s]", options: .regularExpression) != nil
         let hasValidLength = (1...10).contains(userName.count)
-
-        if userName == randomNickname {
-            configureStackViewsForDefaultState()
-        }
         
         if userName.isEmpty {
-            configureStackViewsForCommonState()
+            specialCharactersStackView.configure(to: .common, "특수문자 사용은 안돼요.")
+            lessThanCharactersStackView.configure(to: .common, "한글/영문, 숫자 포함 10자로 사용 가능해요.")
+
             updateNextButton(false)
         } else {
             if !containsSpecialCharacters, hasValidLength {
@@ -285,25 +236,6 @@ extension SetNicknameViewController {
         nextButton.isEnabled = enable
     }
     
-    private func configureStackViewsForDefaultState() {
-        defaultStackView.isHidden = false
-        specialCharactersStackView.isHidden = true
-        lessThanCharactersStackView.isHidden = true
-        generateButton.isHidden = false
-        resetButton.isHidden = true
-    }
-    
-    private func configureStackViewsForCommonState() {
-        specialCharactersStackView.configure(to: .common, "특수문자 사용은 안돼요.")
-        lessThanCharactersStackView.configure(to: .common, "한글/영문, 숫자 포함 10자로 사용 가능해요.")
-        
-        defaultStackView.isHidden = true
-        specialCharactersStackView.isHidden = false
-        lessThanCharactersStackView.isHidden = false
-        generateButton.isHidden = true
-        resetButton.isHidden = false
-    }
-    
     private func configureStackViewsForPassState(containsSpecialCharacters: Bool, hasValidLength: Bool) {
         specialCharactersStackView.configure(
             to: containsSpecialCharacters ? .nonpass : .pass,
@@ -313,12 +245,6 @@ extension SetNicknameViewController {
             to: hasValidLength ? .pass : .nonpass,
             hasValidLength ? "적절한 글자수의 닉네임이에요." : "한글/영문, 숫자 포함 1~10자 이내로 설정해주세요."
         )
-        
-        defaultStackView.isHidden = true
-        specialCharactersStackView.isHidden = false
-        lessThanCharactersStackView.isHidden = false
-        generateButton.isHidden = true
-        resetButton.isHidden = false
     }
 }
 
@@ -333,13 +259,8 @@ extension SetNicknameViewController {
         updateValidationLabelStackView(text: emptyString)
     }
     
-    @objc private func generateButtonDidTap() {
-        viewModel.requestRandomNickname()
-    }
-    
     @objc private func resetButtonDidTap() {
         userNameTextField.text = randomNickname
-        configureStackViewsForDefaultState()
         updateNextButton(true)
     }
     
@@ -360,7 +281,6 @@ extension SetNicknameViewController {
             }
             self?.nextButton.layer.cornerRadius = CGFloat(0)
             self?.nextButton.transform = CGAffineTransform(translationX: 0, y: -keyboardHeight)
-            self?.resetButton.transform = CGAffineTransform(translationX: 0, y: -keyboardHeight)
             self?.view.layoutIfNeeded()
         }
     }
@@ -375,7 +295,6 @@ extension SetNicknameViewController {
             }
             self?.nextButton.layer.cornerRadius = CGFloat(12)
             self?.nextButton.transform = .identity
-            self?.resetButton.transform = .identity
             self?.view.layoutIfNeeded()
         }
     }
