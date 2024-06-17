@@ -26,7 +26,8 @@ struct MainPageMapper {
                         userNickname: detailFeed.userNickname ?? "",
                         userImage: detailFeed.userImage ?? "",
                         createdAt: detailFeed.createdAt ?? "",
-                        updatedAt: detailFeed.updatedAt ?? ""
+                        updatedAt: detailFeed.updatedAt ?? "",
+                        score: detailFeed.score ?? 0
                     )
                 }
             )
