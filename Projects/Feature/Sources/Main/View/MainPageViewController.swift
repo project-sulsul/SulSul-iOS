@@ -115,7 +115,7 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
                                                       title: "취향을 알려주지 않을래?",
                                                       submitLabel: "취향 등록하기!",
                                                       cancelLabel: "아직 괜찮아요",
-                                                      description: "아...이게 정말 좋은데... 뭐라 설명할 방법이 없네... 하면 진짜 도움이 많이 될텐데... 쩝.. 하려면 버튼을 눌러줘바",
+                                                      description: "술, 안주 취향을 알려주시면 딱 맞춰 추천 해드려요.\n등록하신 취향은 언제든지 수정할 수 있어요.",
                                                       submitCompletion: { self.coordinator?.moveTo(appFlow: TabBarFlow.auth(.login), userData: nil)},
                                                       cancelCompletion: { self.tabBarController?.setTabBarHidden(false) })
                         StaticValues.isFirstLaunch = false
