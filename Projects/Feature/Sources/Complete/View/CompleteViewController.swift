@@ -34,7 +34,7 @@ public final class CompleteViewController: BaseViewController {
     }
     
     private lazy var imageView = UIImageView().then {
-        $0.image = UIImage(named: "complete")
+        $0.image = UIImage(named: "complete_thumbsUp")
     }
     
     private lazy var backButton = UIButton().then {
