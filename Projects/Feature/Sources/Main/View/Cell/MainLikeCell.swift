@@ -25,11 +25,12 @@ final class MainLikeCell: UICollectionViewCell {
     })
     
     private lazy var firstFeedImageView = UIImageView().then({
-        $0.backgroundColor = .red
         $0.layer.cornerRadius = moderateScale(number: 12)
         $0.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner]
         $0.layer.masksToBounds = true
         $0.clipsToBounds = true
+        $0.backgroundColor = DesignSystemAsset.gray050.color
+        $0.contentMode = .scaleAspectFill
     })
     
     private lazy var secondFeedImageView = UIImageView().then({
@@ -37,7 +38,8 @@ final class MainLikeCell: UICollectionViewCell {
         $0.layer.maskedCorners = [.layerMaxXMinYCorner]
         $0.layer.masksToBounds = true
         $0.clipsToBounds = true
-        $0.backgroundColor = .green
+        $0.backgroundColor = DesignSystemAsset.gray050.color
+        $0.contentMode = .scaleAspectFill
     })
     
     private lazy var thirdFeedImageView = UIImageView().then({
@@ -45,7 +47,8 @@ final class MainLikeCell: UICollectionViewCell {
         $0.layer.maskedCorners = [.layerMaxXMaxYCorner]
         $0.layer.masksToBounds = true
         $0.clipsToBounds = true
-        $0.backgroundColor = .yellow
+        $0.backgroundColor = DesignSystemAsset.gray050.color
+        $0.contentMode = .scaleAspectFill
     })
     
     override init(frame: CGRect) {

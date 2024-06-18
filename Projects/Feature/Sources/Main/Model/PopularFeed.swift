@@ -24,5 +24,6 @@ struct PopularFeed {
         let userImage: String
         let createdAt: String
         let updatedAt: String
+        let score: Int
     }
 }

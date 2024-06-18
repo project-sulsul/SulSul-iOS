@@ -38,7 +38,7 @@ internal final class ValidationLabelStackView: UIStackView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        configure(to: .begin, "랜덤으로 설정된 닉네임이에요.")
+        configure(to: .begin, "닉네임을 입력해주세요.")
         addViews()
         makeConstraints()
     }
