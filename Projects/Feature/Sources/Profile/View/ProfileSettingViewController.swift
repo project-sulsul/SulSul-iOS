@@ -25,6 +25,7 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
     })
     private lazy var settingStackView = UIStackView().then({
         $0.axis = .vertical
+        $0.spacing = 2
         $0.distribution = .fillEqually
     })
     private lazy var managementTitleLabel = UILabel().then({
@@ -41,8 +42,14 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
         $0.font = Font.regular(size: 14)
         $0.textColor = DesignSystemAsset.gray500.color
     })
-    private lazy var alarmSettingView = SettingView(settingType: .toggle,
-                                                    title: "알림")
+    private lazy var alarmSettingView = SettingView(settingType: .toggle, title: "알림")
+    private lazy var blockUserSettingView = SettingView(settingType: .arrow, title: "차단 관리")
+    
+    private lazy var otherSettingTitleLabel = UILabel().then({
+        $0.text = "기타"
+        $0.font = Font.regular(size: 14)
+        $0.textColor = DesignSystemAsset.gray500.color
+    })
     private lazy var feedBackSettingView = SettingView(settingType: .arrow,
                                                        title: "피드백")
     private lazy var termsSettingView = SettingView(settingType: .arrow,
@@ -53,6 +60,7 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
                                                       title: "회원탈퇴").then({
         $0.isHidden = !StaticValues.isLoggedIn.value
     })
+    
     private lazy var logoutTouchaleLabel = TouchableLabel().then({
         $0.textColor = DesignSystemAsset.red050.color
         $0.font = Font.bold(size: 16)
@@ -103,6 +111,8 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
                                               snackSettingView,
                                               appSettingTitleLabel,
                                               alarmSettingView,
+                                              blockUserSettingView,
+                                              otherSettingTitleLabel,
                                               feedBackSettingView,
                                               termsSettingView,
                                               personalSettingView,
@@ -154,7 +164,11 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
             if StaticValues.isLoggedIn.value {
                 self.coordinator?.moveTo(appFlow: TabBarFlow.more(.selectDrink), userData: nil)
             } else {
-                self.showAlertView(withType: .oneButton, title: "로그인", description: "해라", submitCompletion: nil, cancelCompletion: nil)
+                self.showAlertView(withType: .oneButton,
+                                   title: "알림",
+                                   description: "로그인이 필요한 기능이에요.",
+                                   submitCompletion: nil,
+                                   cancelCompletion: nil)
             }
         }
         snackSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
@@ -162,16 +176,39 @@ public final class ProfileSettingViewController: HiddenTabBarBaseViewController 
             if StaticValues.isLoggedIn.value {
                 self.coordinator?.moveTo(appFlow: TabBarFlow.more(.selectSnack), userData: nil)
             } else {
-                self.showAlertView(withType: .oneButton, title: "로그인", description: "해라", submitCompletion: nil, cancelCompletion: nil)
+                self.showAlertView(withType: .oneButton,
+                                   title: "알림",
+                                   description: "로그인이 필요한 기능이에요.",
+                                   submitCompletion: nil,
+                                   cancelCompletion: nil)
             }
         }
-        termsSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
+        blockUserSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
             guard let self = self else { return }
-            self.coordinator?.moveTo(appFlow: TabBarFlow.common(.web), userData: ["url": URL(string: "https://mopil1102.notion.site/51b45ca9663843f89174798fb6f725e2?pvs=4")])
+            if StaticValues.isLoggedIn.value {
+                self.coordinator?.moveTo(appFlow: TabBarFlow.more(.blockUser), userData: nil)
+            } else {
+                self.showAlertView(withType: .oneButton,
+                                   title: "알림",
+                                   description: "로그인이 필요한 기능이에요.",
+                                   submitCompletion: nil,
+                                   cancelCompletion: nil)
+            }
+        }
+        feedBackSettingView.containerView.setOpaqueTapGestureRecognizer {
+            guard let url = URL(string: "https://apps.apple.com/us/app/%EC%88%A0%EC%88%A0-sulsul/id6472654324") else { return }
+            
+            UIApplication.shared.open(url)
+        }
+        termsSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
+            guard let self = self,
+                  let url = URL(string: "https://mopil1102.notion.site/51b45ca9663843f89174798fb6f725e2?pvs=4") else { return }
+            self.coordinator?.moveTo(appFlow: TabBarFlow.common(.web), userData: ["url": url])
         }
         personalSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
-            guard let self = self else { return }
-            self.coordinator?.moveTo(appFlow: TabBarFlow.common(.web), userData: ["url": URL(string: "https://mopil1102.notion.site/eadb2ee65a114940bae603e898dd21f0?pvs=4")])
+            guard let self = self,
+                  let url = URL(string: "https://mopil1102.notion.site/eadb2ee65a114940bae603e898dd21f0?pvs=4") else { return }
+            self.coordinator?.moveTo(appFlow: TabBarFlow.common(.web), userData: ["url": url])
         }
         signOutSettingView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
             guard let self = self else { return }

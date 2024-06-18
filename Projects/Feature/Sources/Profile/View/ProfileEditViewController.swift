@@ -69,12 +69,6 @@ public final class ProfileEditViewController: HiddenTabBarBaseViewController {
         $0.setImage(UIImage(named: "filled_clear"), for: .normal)
     }
     
-    private lazy var resetTouchableLabel = TouchableLabel().then({
-        $0.text = "랜덤 닉네임 쓸래요!"
-        $0.font = Font.bold(size: 16)
-        $0.textColor = DesignSystemAsset.gray400.color
-    })
-    
     private lazy var specializeGuideImageView = UIImageView().then({
         $0.image = UIImage(named: "common_checkmark")
         $0.tintColor = DesignSystemAsset.gray700.color
@@ -139,7 +133,6 @@ public final class ProfileEditViewController: HiddenTabBarBaseViewController {
                           modifyProfileButton,
                           induceUserNameLabel,
                           userNameTextField,
-                          resetTouchableLabel,
                           specializeGuideImageView,
                           specializeGuidLabel,
                           countGuideImageView,
@@ -204,10 +197,6 @@ public final class ProfileEditViewController: HiddenTabBarBaseViewController {
             $0.centerY.equalTo(countGuideImageView.snp.centerY)
             $0.leading.equalTo(countGuideImageView.snp.trailing).offset(moderateScale(number: 6))
         }
-        resetTouchableLabel.snp.makeConstraints {
-            $0.bottom.equalTo(nextButton.snp.top).offset(-24)
-            $0.centerX.equalToSuperview()
-        }
         nextButton.snp.makeConstraints {
             $0.leading.trailing.equalTo(topHeaderView).inset(moderateScale(number: 20))
             let offset = getSafeAreaBottom() + moderateScale(number: 12)
@@ -224,10 +213,6 @@ public final class ProfileEditViewController: HiddenTabBarBaseViewController {
             self?.showCameraBottomSheet(selectCameraCompletion: self?.openCamera,
                                         selectAlbumCompletion: self?.openAlbum,
                                         baseCompletion: self?.settingBaseImage)
-        }
-        resetTouchableLabel.setOpaqueTapGestureRecognizer { [weak self] in
-            guard let self = self else { return }
-            self.viewModel.getRandomNickname()
         }
         nextButton.onTapped { [weak self] in
             guard let self = self else { return }

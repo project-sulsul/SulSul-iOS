@@ -22,27 +22,6 @@ public final class SetNicknameViewModel {
     
     public init() {}
     
-    public func requestRandomNickname() {
-        let accessToken = KeychainStore.shared.read(label: "accessToken")
-        var headers: HTTPHeaders = [
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + accessToken!
-        ]
-        
-        networkWrapper.getBasicTask(stringURL: "/users/nickname", header: headers) { [weak self] result in
-            guard let self = self else { return }
-            
-            switch result {
-            case .success(let response):
-                if let userName = self.parseRandomNickname(from: response) {
-                    self.userNameSubject.send(userName)
-                }
-            case .failure(let error):
-                print(error)
-            }
-        }
-    }
-    
     private func parseRandomNickname(from data: Data) -> String? {
         do {
             let response = try jsonDecoder.decode(Nickname.self, from: data)

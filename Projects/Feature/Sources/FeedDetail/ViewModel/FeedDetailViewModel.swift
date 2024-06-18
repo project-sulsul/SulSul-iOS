@@ -39,6 +39,8 @@ public final class FeedDetailViewModel {
     private let isLiked = CurrentValueSubject<Bool, Never>(false)
     /// 피드 삭제 처리 여부
     private var isDeleted = CurrentValueSubject<Bool, Never>(false)
+    /// 사용자 차단 여부
+    private var isBlocked = PassthroughSubject<Bool, Never>()
     /// 현재 피드와 관련된 다른 피드 개수
     private var numberOfRelatedFeed = CurrentValueSubject<Int, Never>(0)
     private var cancelBag = Set<AnyCancellable>()
@@ -84,6 +86,10 @@ extension FeedDetailViewModel {
     
     func isDeletedPublisher() -> AnyPublisher<Bool, Never> {
         return isDeleted.eraseToAnyPublisher()
+    }
+    
+    func isBlockedPublisher() -> AnyPublisher<Bool, Never> {
+        return isBlocked.eraseToAnyPublisher()
     }
 }
 
@@ -251,6 +257,52 @@ extension FeedDetailViewModel {
                 }
             case .failure(let error):
                 debugPrint("\(#function): Request failed, Reason is: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    public func requestBlockUser(userId: Int) {
+        var headers: HTTPHeaders? = nil
+        
+        if UserDefaultsUtil.shared.isLogin() {
+            guard let accessToken = KeychainStore.shared.read(label: "accessToken")
+            else { return }
+            debugPrint("\(#function): User accessToken is \(accessToken)")
+            
+            headers = [
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + accessToken
+            ]
+        }
+        
+        networkWrapper.postBasicTask(stringURL: "/users/\(userId)/block", header: headers) { [weak self] result in
+            guard let self = self else { return }
+            
+            switch result {
+            case .success(let response):
+                if let data = try? self.jsonDecoder.decode(Block.self, from: response) {
+                    self.setBlockUser(userId: data.targetUserID)
+                    self.isBlocked.send(true)
+                    
+                    debugPrint("\(#function) -- Request succeed.")
+                }
+            case .failure(let error):
+                debugPrint("\(#function) -- Request failed. Reason is \(error)")
+            }
+        }
+    }
+    
+    private func setBlockUser(userId: Int) {
+        networkWrapper.getBasicTask(stringURL: "/users/\(userId)") { [weak self] result in
+            guard let self = self else { return }
+            
+            switch result {
+            case .success(let response):
+                if let data = try? self.jsonDecoder.decode(BlockUser.self, from: response) {
+                    UserDefaultsUtil.shared.setObject(data, forkey: .blockUser)
+                }
+            case .failure(let error):
+                debugPrint("\(#function) -- Request failed. Reason is \(error)")
             }
         }
     }

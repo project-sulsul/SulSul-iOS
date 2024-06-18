@@ -177,6 +177,7 @@ final class MainDifferenceCell: UICollectionViewCell {
             }
             drinkLabel.text = StaticValues.getDrinkPairingById(feed.pairingIds.first ?? 0)?.name
             foodLabel.text = StaticValues.getSnackPairingById(feed.pairingIds.last ?? 0)?.name
+            scoreLabel.text = "\(feed.score)"
         }
     }
     

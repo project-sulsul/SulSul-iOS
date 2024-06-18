@@ -397,6 +397,39 @@ extension FeedDetailViewController {
         )
     }
     
+    private func blockUser() {
+        self.showAlertView(
+            withType: .twoButton,
+            title: "사용자를 차단할까요?",
+            description: "차단하면 이 사용자의 게시물이 더이상 노출되지 않아요. 차단해제는 설정에서 할 수 있어요.",
+            submitText: "차단하기",
+            submitCompletion: { [weak self] in
+                guard let self = self else { return }
+                
+                let rootVC = self.navigationController?.viewControllers.dropLast().last as? BaseViewController
+                
+                self.feedDetailViewModel.requestBlockUser(userId: self.feedUserID)
+                
+                self.feedDetailViewModel.isBlockedPublisher()
+                    .receive(on: DispatchQueue.main)
+                    .sink { isBlocked in
+                        if isBlocked {
+                            rootVC?.showToastMessageView(toastType: .success, title: "사용자를 차단했어요.", inset: 64)
+                            
+                            rootVC?.loadViewIfNeeded()
+                            
+                            self.navigationController?.popViewController(animated: true)
+                        }
+                        if !isBlocked {
+                            self.showToastMessageView(toastType: .error, title: "사용자를 차단하는 도중 오류가 발생했어요.", inset: 64)
+                        }
+                    }
+                    .store(in: &self.cancelBag)
+            },
+            cancelCompletion: nil
+        )
+    }
+    
     private func reportFeed() {
         let viewModel = ReportViewModel(reportType: .feed, targetId: feedID)
         let viewController = ReportViewController(viewModel: viewModel,
@@ -572,6 +605,10 @@ extension FeedDetailViewController: FeedDetailMenuBottomSheetDelegate {
     
     func didTapDeleteFeedView() {
         self.deleteFeed()
+    }
+    
+    func didTapBlockUserView() {
+        self.blockUser()
     }
     
     func didTapReportFeedView() {
