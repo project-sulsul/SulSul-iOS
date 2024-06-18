@@ -36,8 +36,6 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
                                      supplementaryViewOfKind: .header)
         $0.registerSupplimentaryView(MainLikeHeaderView.self,
                                      supplementaryViewOfKind: .header)
-        $0.registerSupplimentaryView(MainLikeFooterView.self,
-                                     supplementaryViewOfKind: .footer)
         $0.registerCell(MainPreferenceCell.self)
         $0.registerCell(MainNoPreferenceCell.self)
         $0.registerCell(MainLikeCell.self)
@@ -126,7 +124,7 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
                                                       title: "취향을 알려주지 않을래?",
                                                       submitLabel: "취향 등록하기!",
                                                       cancelLabel: "아직 괜찮아요",
-                                                      description: "아...이게 정말 좋은데... 뭐라 설명할 방법이 없네... 하면 진짜 도움이 많이 될텐데... 쩝.. 하려면 버튼을 눌러줘바",
+                                                      description: "술, 안주 취향을 알려주시면 딱 맞춰 추천 해드려요.\n등록하신 취향은 언제든지 수정할 수 있어요.",
                                                       submitCompletion: { self.coordinator?.moveTo(appFlow: TabBarFlow.auth(.login), userData: nil)},
                                                       cancelCompletion: { self.tabBarController?.setTabBarHidden(false) })
                         StaticValues.isFirstLaunch = false
@@ -214,13 +212,7 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
                     elementKind: UICollectionView.elementKindSectionHeader,
                     alignment: .top)
                 
-                let footerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .absolute(moderateScale(number: 52)))
-                let footer = NSCollectionLayoutBoundarySupplementaryItem(
-                    layoutSize: footerSize,
-                    elementKind: UICollectionView.elementKindSectionFooter,
-                    alignment: .bottom)
-                
-                section.boundarySupplementaryItems = [header, footer]
+                section.boundarySupplementaryItems = [header]
                 return section
             case 2:
                 var itemHeight: CGFloat = 0
@@ -260,8 +252,8 @@ extension MainPageViewController: UICollectionViewDataSource {
         if section == 0 {
             return 1
         } else if section == 1 { // MARK: - 좋아요 많은 조합
-            if viewModel.getPopularFeedsValue().count > 3 {
-                return 3
+            if viewModel.getPopularFeedsValue().count > 2 {
+                return 2
             } else {
                 return viewModel.getPopularFeedsValue().count
             }
@@ -332,12 +324,6 @@ extension MainPageViewController: UICollectionViewDataSource {
                 guard let likeHeaderView = collectionView.dequeueSupplimentaryView(MainLikeHeaderView.self, supplementaryViewOfKind: .header, indexPath: indexPath) else { return .init() }
                 likeHeaderView.updateView(title: "좋아요 많은 조합", subTitle: "자주, 늘 먹는데에는 이유가 있는 법!", separator: true)
                 return likeHeaderView
-            } else if kind == UICollectionView.elementKindSectionFooter {
-                guard let likeFooterView = collectionView.dequeueSupplimentaryView(MainLikeFooterView.self, supplementaryViewOfKind: .footer, indexPath: indexPath) else { return .init() }
-                likeFooterView.containerView.setOpaqueTapGestureRecognizer { [weak self] in
-                    self?.coordinator?.moveTo(appFlow: TabBarFlow.ranking(.main), userData: nil)
-                }
-                return likeFooterView
             }
         } else if indexPath.section == 2 {
             if kind == UICollectionView.elementKindSectionHeader {

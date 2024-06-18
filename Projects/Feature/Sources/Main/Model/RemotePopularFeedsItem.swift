@@ -25,6 +25,7 @@ struct RemotePopularDetailFeed: Decodable {
     let userImage: String?
     let createdAt: String?
     let updatedAt: String?
+    let score: Int?
     
     private enum CodingKeys: String, CodingKey {
         case feedId = "feed_id"
@@ -39,5 +40,6 @@ struct RemotePopularDetailFeed: Decodable {
         case userImage = "user_image"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case score
     }
 }

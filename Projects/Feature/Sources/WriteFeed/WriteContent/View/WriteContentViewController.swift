@@ -277,7 +277,11 @@ open class WriteContentViewController: BaseHeaderViewController, CommonBaseCoord
         actionButton.onTapped { [weak self] in
             guard let selfRef = self,
                   let snack = selfRef.recognizedSnackLabel.text,
-                  let drink = selfRef.recognizedDrinkLabel.text else { return }
+                  let drink = selfRef.recognizedDrinkLabel.text else {
+                
+                self?.showToastMessageView(toastType: .error, title: "술과 안주를 모두 선택해주세요!")
+                return
+            }
             
             let isTextEmpty = selfRef.contentTextView.text.isEmpty
             
