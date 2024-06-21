@@ -101,7 +101,8 @@ final class RandomFeedViewModel {
     
     private func requestRandomFeed(_ request: RandomFeedModel.Request) -> AnyPublisher<RandomFeedModel.Feeds, Never> {
         return Future<RandomFeedModel.Feeds, Never> { promise in
-            NetworkWrapper.shared.getBasicTask(stringURL: "/feeds/random?exclude_feed_ids=2%2C4&size=6") { [weak self] result in
+            let excludeFeedIds = request.exclude_feed_ids.isEmpty ? "" : "exclude_feed_ids=\(request.exclude_feed_ids)"
+            NetworkWrapper.shared.getBasicTask(stringURL: "/feeds/random?size=6" + excludeFeedIds) { [weak self] result in
                 guard let selfRef = self else { return }
                 
                 switch result {
