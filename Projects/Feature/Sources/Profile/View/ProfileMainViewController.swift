@@ -13,10 +13,13 @@ import Kingfisher
 
 public final class ProfileMainViewController: BaseViewController {
     private var cancelBag = Set<AnyCancellable>()
+    var delegate: MyFeedViewDelegate?
     var coordinator: MoreBaseCoordinator?
     private let viewModel: ProfileMainViewModel
     
     private lazy var topHeaderView = UIView()
+    
+    private lazy var logoImageView = LogoImageView()
     
     private lazy var settingTouchableImageView = TouchableImageView(frame: .zero).then({
         $0.image = UIImage(named: "common_setting")
@@ -60,7 +63,9 @@ public final class ProfileMainViewController: BaseViewController {
         $0.updateView(false)
     })
     
-    private lazy var myFeedView = MyFeedView(viewModel: viewModel, tabBarController: self.tabBarController ?? UITabBarController())
+    private lazy var myFeedView = MyFeedView(viewModel: viewModel, tabBarController: self.tabBarController ?? UITabBarController()).then({
+        $0.delegate = self
+    })
     
     private lazy var likeFeedView = LikeFeedView( viewModel: viewModel, tabBarController: self.tabBarController ?? UITabBarController()).then({
         $0.isHidden = true
@@ -142,7 +147,10 @@ public final class ProfileMainViewController: BaseViewController {
     public override func addViews() {
         view.addSubviews([topHeaderView,
                           containerView])
-        topHeaderView.addSubviews([settingTouchableImageView])
+        topHeaderView.addSubviews([
+            logoImageView,
+            settingTouchableImageView
+        ])
         containerView.addSubviews([profileView,
                                    selectFeedView,
                                    myFeedView,
@@ -164,6 +172,12 @@ public final class ProfileMainViewController: BaseViewController {
         containerView.snp.makeConstraints {
             $0.top.equalTo(topHeaderView.snp.bottom)
             $0.leading.trailing.bottom.equalToSuperview()
+        }
+        logoImageView.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalToSuperview().inset(moderateScale(number: 20))
+            $0.width.equalTo(moderateScale(number: 96))
+            $0.height.equalTo(moderateScale(number: 14))
         }
         settingTouchableImageView.snp.makeConstraints {
             $0.centerY.equalToSuperview()
@@ -222,13 +236,10 @@ public final class ProfileMainViewController: BaseViewController {
             self.likeFeedView.isHidden = false
         }
         
-//        searchTouchableIamgeView.onTapped { [weak self] in
-//            self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.search), userData: nil)
-//        }
-        
         settingTouchableImageView.setOpaqueTapGestureRecognizer { [weak self] in
             self?.coordinator?.moveTo(appFlow: TabBarFlow.more(.profileSetting), userData: nil)
         }
+        
         profileEditTouchableLabel.setOpaqueTapGestureRecognizer { [weak self] in
             guard let self = self else { return }
             self.coordinator?.moveTo(appFlow: TabBarFlow.more(.profileEdit), userData: ["delegate": self])
@@ -237,5 +248,13 @@ public final class ProfileMainViewController: BaseViewController {
     
     @objc func profileIsChanged() {
         viewModel.getUserInfo()
+    }
+}
+
+// MARK: - MyFeedView Delegate
+//
+extension ProfileMainViewController: MyFeedViewDelegate {
+    func didTapNextLabel() {
+        self.coordinator?.moveTo(appFlow: TabBarFlow.more(.writeFeed), userData: nil)
     }
 }

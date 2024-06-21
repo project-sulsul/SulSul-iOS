@@ -48,6 +48,8 @@ final class CommonCoordinator: CommonBaseCoordinator {
             moveToComment()
         case .detailFeed:
             moveToDetailFeed(userData)
+        case .combineFeed:
+            moveToCombineFeed(userData)
         case .setting:
             moveToSetting()
         case .selectSnack:
@@ -80,10 +82,17 @@ final class CommonCoordinator: CommonBaseCoordinator {
     private func moveToDetailFeed(_ userData: [String: Any]?) {
         guard let feedId = userData?["feedId"] as? Int else { return }
         
-//        let viewModel = DetailFeedViewModel(feedID: feedId)
+        //        let viewModel = DetailFeedViewModel(feedID: feedId)
         let viewController = FeedDetailViewController(feedID: feedId)
         currentNavigationViewController?.pushViewController(viewController, animated: true)
-        }
+    }
+    
+    private func moveToCombineFeed(_ userData: [String: Any]?) {
+        guard let popularFeed = userData?["popularFeed"] as? PopularFeed else { return }
+        let viewController = CombineFeedViewController(popularFeed: popularFeed)
+        viewController.coordinator = self
+        currentNavigationViewController?.pushViewController(viewController, animated: true)
+    }
 
     private func moveToComment() {
         let vc = CommentViewController()

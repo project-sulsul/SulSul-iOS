@@ -17,6 +17,11 @@ public final class BaseTopView: UIView {
         $0.contentMode = .scaleAspectFit
     }
     
+    private lazy var titleLabel = UILabel().then({
+        $0.font = Font.bold(size: 18)
+        $0.textColor = DesignSystemAsset.gray900.color
+    })
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
@@ -30,7 +35,7 @@ public final class BaseTopView: UIView {
     
     private func attribute() {
         addSubviews([backTouchableView])
-        backTouchableView.addSubview(backImageView)
+        backTouchableView.addSubviews([backImageView, titleLabel])
         
         backTouchableView.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(moderateScale(number: 20))
@@ -42,5 +47,14 @@ public final class BaseTopView: UIView {
             $0.center.equalToSuperview()
             $0.size.equalTo(moderateScale(number: 24))
         }
+        
+        titleLabel.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalTo(backImageView.snp.trailing).offset(moderateScale(number: 8))
+        }
+    }
+    
+    public func setTitle(_ title: String) {
+        titleLabel.text = title
     }
 }

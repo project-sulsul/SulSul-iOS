@@ -19,6 +19,8 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
     
     private lazy var topHeaderView = UIView()
     
+    private lazy var logoImageView = LogoImageView()
+    
     private lazy var searchTouchableIamgeView = TouchableImageView(frame: .zero).then({
         $0.image = UIImage(named: "common_search")
         $0.tintColor = DesignSystemAsset.gray900.color
@@ -57,20 +59,17 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
     
     public override func viewDidLoad() {
         super.viewDidLoad()
-        addViews()
-        makeConstraints()
+        CommonUtil.showLoadingView()
         bind()
-        
-        searchTouchableIamgeView.onTapped { [weak self] in
-            self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.search), userData: nil)
-        }
     }
     
     public override func addViews() {
         view.addSubviews([topHeaderView,
                           mainCollectionView])
         
-        topHeaderView.addSubviews([searchTouchableIamgeView])
+        topHeaderView.addSubviews([
+            logoImageView,
+            searchTouchableIamgeView])
     }
     
     public override func makeConstraints() {
@@ -78,6 +77,12 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
             $0.height.equalTo(moderateScale(number: 52))
             $0.width.centerX.equalToSuperview()
             $0.top.equalTo(view.safeAreaLayoutGuide)
+        }
+        logoImageView.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalToSuperview().inset(moderateScale(number: 20))
+            $0.width.equalTo(moderateScale(number: 96))
+            $0.height.equalTo(moderateScale(number: 14))
         }
         searchTouchableIamgeView.snp.makeConstraints {
             $0.centerY.equalToSuperview()
@@ -91,7 +96,24 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
         }
     }
     
+    public override func setupIfNeeded() {
+        searchTouchableIamgeView.onTapped { [weak self] in
+            self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.search), userData: nil)
+        }
+    }
+    
     private func bind() {
+        viewModel.getErrorSubject()
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] error in
+                self?.showAlertView(withType: .oneButton,
+                                    title: error,
+                                    description: error,
+                                    submitCompletion: nil,
+                                    cancelCompletion: nil)
+            }.store(in: &cancelBag)
+        
         StaticValues.isLoggedInPublisher()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -100,13 +122,17 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
             }.store(in: &cancelBag)
         
         viewModel.userInfoPublisher()
+            .dropFirst()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] result in
                 guard let self = self else { return }
+                print(">>$")
+                print(result)
                 if result.status == UserInfoStatus.notLogin.rawValue { // MARK: - 로그인 하지 않은 유저
                     viewModel.getPopularFeeds()
                     viewModel.getDifferenceFeeds()
                     viewModel.getFeedsByAlcohol()
+                    print(StaticValues.isFirstLaunch)
                     if StaticValues.isFirstLaunch {
                         self.tabBarController?.setTabBarHidden(true, animated: false)
                         self.showBottomSheetAlertView(bottomSheetAlertType: .verticalTwoButton,
@@ -117,12 +143,11 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
                                                       submitCompletion: { self.coordinator?.moveTo(appFlow: TabBarFlow.auth(.login), userData: nil)},
                                                       cancelCompletion: { self.tabBarController?.setTabBarHidden(false) })
                         StaticValues.isFirstLaunch = false
-                    } else {
-                        StaticValues.isFirstLaunch = false
                     }
                 } else if result.status == UserInfoStatus.banned.rawValue { // MARK: - 밴된 유저
-                    
+                    StaticValues.isFirstLaunch = false
                 } else { // MARK: - 로그인한 유저
+                    StaticValues.isFirstLaunch = false
                     viewModel.getPopularFeeds()
                     viewModel.getDifferenceFeeds()
                     viewModel.getPreferenceFeeds()
@@ -139,9 +164,8 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.mainCollectionView.reloadData()
+                CommonUtil.hideLoadingView()
             }.store(in: &cancelBag)
-        
-        viewModel.getUserInfo()
     }
     
     @objc
@@ -219,6 +243,9 @@ public final class MainPageViewController: BaseViewController, HomeBaseCoordinat
                     layoutSize: headerSize,
                     elementKind: UICollectionView.elementKindSectionHeader,
                     alignment: .top)
+                
+                section.interGroupSpacing = moderateScale(number: 16)
+                section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
  
                 section.boundarySupplementaryItems = [header]
                 return section
@@ -270,6 +297,7 @@ extension MainPageViewController: UICollectionViewDataSource {
                 }
             } else {
                 guard let cell = collectionView.dequeueReusableCell(MainPreferenceCell.self, indexPath: indexPath) else { return .init() }
+                cell.delegate = self
                 cell.alcoholBind(viewModel.getSelectedAlcoholFeedsValue())
                 return cell
             }
@@ -278,9 +306,9 @@ extension MainPageViewController: UICollectionViewDataSource {
             let popularFeed = viewModel.getPopularFeedsValue()[indexPath.item]
             cell.bind(popularFeed)
             
-//            cell.containerView.setOpaqueTapGestureRecognizer { [weak self] in
-//                self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.detailFeed), userData: ["feedId": popularFeed.)
-//            }
+            cell.containerView.setOpaqueTapGestureRecognizer { [weak self] in
+                self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.combineFeed), userData: ["popularFeed": popularFeed])
+            }
             return cell
         case 2:
             guard let cell = collectionView.dequeueReusableCell(MainDifferenceCell.self, indexPath: indexPath) else { return .init() }
@@ -321,5 +349,12 @@ extension MainPageViewController: UICollectionViewDataSource {
             }
         }
         return UICollectionReusableView()
+    }
+}
+
+extension MainPageViewController: MainPreferenceCellDelegate {
+    func cellIsSelected(_ cell: MainPreferenceCell, feedId: Int) {
+        self.coordinator?.moveTo(appFlow: TabBarFlow.common(.detailFeed),
+                                  userData: ["feedId": feedId])
     }
 }

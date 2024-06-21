@@ -10,32 +10,31 @@ import UIKit
 import DesignSystem
 
 public final class RankingMainViewController: BaseViewController, RankingBaseCoordinated {
+    // MARK: - Properties
+    //
     var coordinator: RankingBaseCoordinator?
     var viewModel: RankingMainViewModel
     
-    private var cancelBag = Set<AnyCancellable>()
     private var viewControllers: [UIViewController] = []
+    private var cancelBag = Set<AnyCancellable>()
     
     private lazy var rankingDrinkViewController = RankingDrinkViewController()
+    
     private lazy var rankingCombinationViewController = RankingCombinationViewController()
+    
     private lazy var pageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal).then {
         $0.dataSource = self
         $0.delegate = self
     }
     
-    private lazy var topHeaderView = UIView().then {
-        $0.frame = .zero
-    }
+    private lazy var topHeaderView = UIView()
+    
+    private lazy var logoImageView = LogoImageView()
     
     private lazy var searchTouchableImageView = TouchableImageView(frame: .zero).then {
         $0.image = UIImage(named: "common_search")
         $0.tintColor = DesignSystemAsset.gray900.color
     }
-    
-//    private lazy var alarmTouchableImageView = TouchableImageView(frame: .zero).then {
-//        $0.image = UIImage(named: "common_alarm")
-//        $0.tintColor = DesignSystemAsset.gray900.color
-//    }
     
     private lazy var titleLabel = UILabel().then {
         $0.text = "이번 주 랭킹"
@@ -45,15 +44,13 @@ public final class RankingMainViewController: BaseViewController, RankingBaseCoo
     }
     
     private lazy var weekendLabel = UILabel().then {
-        $0.text = "기간 집계 중 오류가 발생했습니다."
         $0.setLineHeight(22, font: Font.regular(size: 14))
         $0.font = Font.regular(size: 14)
         $0.textColor = DesignSystemAsset.gray600.color
+        $0.alpha = 0
     }
     
-    private lazy var pageTabBarContainerView = UIView().then {
-        $0.frame = .zero
-    }
+    private lazy var pageTabBarContainerView = UIView()
     
     private lazy var horizontalFlowLayout = UICollectionViewFlowLayout().then {
         $0.scrollDirection = .horizontal
@@ -67,6 +64,91 @@ public final class RankingMainViewController: BaseViewController, RankingBaseCoo
         $0.register(PageTabBarCell.self, forCellWithReuseIdentifier: PageTabBarCell.reuseIdentifier)
     }
     
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        self.addViews()
+        self.makeConstraints()
+        self.preparePageViewController()
+        self.bind()
+    }
+    
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(true)
+        
+        UIView.animate(withDuration: 0.3) {
+            self.weekendLabel.alpha = 1
+        }
+    }
+    
+    public override func addViews() {
+        self.pageTabBarContainerView.addSubview(self.pageTabBarView)
+        
+        self.topHeaderView.addSubviews([
+            self.logoImageView,
+            self.searchTouchableImageView
+        ])
+        
+        self.view.addSubviews([
+            self.topHeaderView,
+            self.titleLabel,
+            self.weekendLabel,
+            self.pageTabBarContainerView,
+            self.pageViewController.view
+        ])
+        
+        self.addChild(self.pageViewController)
+    }
+    
+    public override func makeConstraints() {
+        self.topHeaderView.snp.makeConstraints {
+            $0.height.equalTo(moderateScale(number: 52))
+            $0.width.centerX.equalToSuperview()
+            $0.top.equalTo(view.safeAreaLayoutGuide)
+        }
+        self.searchTouchableImageView.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.trailing.equalToSuperview().inset(moderateScale(number: 20))
+            $0.size.equalTo(moderateScale(number: 24))
+        }
+        self.logoImageView.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalToSuperview().inset(moderateScale(number: 20))
+            $0.width.equalTo(moderateScale(number: 96))
+            $0.height.equalTo(moderateScale(number: 14))
+        }
+        self.titleLabel.snp.makeConstraints {
+            $0.leading.equalToSuperview().offset(moderateScale(number: 20))
+            $0.top.equalTo(self.topHeaderView.snp.bottom)
+        }
+        self.weekendLabel.snp.makeConstraints {
+            $0.leading.equalTo(self.titleLabel.snp.trailing).offset(moderateScale(number: 8))
+            $0.bottom.equalTo(self.titleLabel)
+        }
+        self.pageTabBarContainerView.snp.makeConstraints {
+            $0.leading.trailing.equalToSuperview()
+            $0.top.equalTo(self.titleLabel.snp.bottom).offset(moderateScale(number: 8))
+            $0.height.equalTo(moderateScale(number: 40))
+        }
+        self.pageTabBarView.snp.makeConstraints {
+            $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 20))
+            $0.top.bottom.equalToSuperview()
+        }
+        self.pageViewController.view.snp.makeConstraints {
+            $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 20))
+            $0.top.equalTo(self.pageTabBarView.snp.bottom).offset(moderateScale(number: 16))
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
+    }
+    
+    public override func setupIfNeeded() {
+        self.searchTouchableImageView.setOpaqueTapGestureRecognizer { [weak self] in
+            self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.search), userData: nil)
+        }
+    }
+    
+    // MARK: - Initializer
+    //
     init(viewModel: RankingMainViewModel) {
         self.viewModel = viewModel
         
@@ -77,90 +159,15 @@ public final class RankingMainViewController: BaseViewController, RankingBaseCoo
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        addViews()
-        makeConstraints()
-        preparePageViewController()
-        bind()
-    }
-    
-    public override func addViews() {
-        pageTabBarContainerView.addSubview(pageTabBarView)
-        
-        topHeaderView.addSubviews([
-            searchTouchableImageView
-//            alarmTouchableImageView
-        ])
-        
-        view.addSubviews([
-            topHeaderView,
-            titleLabel,
-            weekendLabel,
-            pageTabBarContainerView,
-            pageViewController.view
-        ])
-        
-        addChild(pageViewController)
-    }
-    
-    public override func makeConstraints() {
-        topHeaderView.snp.makeConstraints {
-            $0.height.equalTo(moderateScale(number: 52))
-            $0.width.centerX.equalToSuperview()
-            $0.top.equalTo(view.safeAreaLayoutGuide)
-        }
-        searchTouchableImageView.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
-            $0.trailing.equalToSuperview().inset(moderateScale(number: 20))
-            $0.size.equalTo(moderateScale(number: 24))
-        }
-//        alarmTouchableImageView.snp.makeConstraints {
-//            $0.centerY.equalToSuperview()
-//            $0.trailing.equalToSuperview().offset(moderateScale(number: -20))
-//            $0.size.equalTo(moderateScale(number: 24))
-//        }
-        titleLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(moderateScale(number: 20))
-            $0.top.equalTo(topHeaderView.snp.bottom)
-        }
-        weekendLabel.snp.makeConstraints {
-            $0.leading.equalTo(titleLabel.snp.trailing).offset(moderateScale(number: 8))
-            $0.bottom.equalTo(titleLabel)
-        }
-        pageTabBarContainerView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview()
-            $0.top.equalTo(titleLabel.snp.bottom).offset(moderateScale(number: 8))
-            $0.height.equalTo(moderateScale(number: 40))
-        }
-        pageTabBarView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 20))
-            $0.top.bottom.equalToSuperview()
-        }
-        pageViewController.view.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 20))
-            $0.top.equalTo(pageTabBarView.snp.bottom).offset(moderateScale(number: 16))
-            $0.bottom.equalTo(view.safeAreaLayoutGuide)
-        }
-    }
-    
-    public override func setupIfNeeded() {
-        searchTouchableImageView.setOpaqueTapGestureRecognizer { [weak self] in
-            self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.search), userData: nil)
-        }
-//        alarmTouchableImageView.setOpaqueTapGestureRecognizer { [weak self] in
-//            self?.coordinator?.moveTo(appFlow: TabBarFlow.common(.detailFeed), userData: nil)
-//        }
-    }
-    
-    // MARK: - Custom Method
-    
+}
+
+// MARK: - Custom method
+//
+extension RankingMainViewController {
     private func bind() {
-        viewModel.requestRankingDate()
+        self.viewModel.requestRankingDate()
         
-        viewModel
+        self.viewModel
             .rankingDatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] value in
@@ -171,29 +178,29 @@ public final class RankingMainViewController: BaseViewController, RankingBaseCoo
     }
     
     private func preparePageViewController() {
-        viewControllers = [rankingDrinkViewController, rankingCombinationViewController]
+        self.viewControllers = [self.rankingDrinkViewController, self.rankingCombinationViewController]
         
-        pageViewController.didMove(toParent: self)
-        pageViewController.setViewControllers([viewControllers.first!], direction: .forward, animated: true)
+        self.pageViewController.didMove(toParent: self)
+        self.pageViewController.setViewControllers([self.viewControllers.first!], direction: .forward, animated: true)
     }
 }
 
 // MARK: - PageTabBar CollectionView DataSource
-
+//
 extension RankingMainViewController: UICollectionViewDataSource {
     public func collectionView(
         _ collectionView: UICollectionView,
         numberOfItemsInSection section: Int
     ) -> Int {
-        return viewControllers.count
+        return self.viewControllers.count
     }
     
     public func collectionView(
         _ collectionView: UICollectionView,
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PageTabBarCell.reuseIdentifier, for: indexPath)
-                as? PageTabBarCell else { return UICollectionViewCell() }
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PageTabBarCell.reuseIdentifier, for: indexPath) as? PageTabBarCell
+        else { return .init() }
         
         if indexPath.item == 0 {
             cell.title = "술"
@@ -207,7 +214,7 @@ extension RankingMainViewController: UICollectionViewDataSource {
 }
 
 // MARK: - PageTabBar CollectionView Delegate
-
+//
 extension RankingMainViewController: UICollectionViewDelegate {
     public func collectionView(
         _ collectionView: UICollectionView,
@@ -233,7 +240,7 @@ extension RankingMainViewController: UICollectionViewDelegate {
 }
 
 // MARK: - 페이지 탭바 CollectionViewFlowLayout 델리게이트
-
+//
 extension RankingMainViewController: UICollectionViewDelegateFlowLayout {
     public func collectionView(
         _ collectionView: UICollectionView,
@@ -264,7 +271,7 @@ extension RankingMainViewController: UICollectionViewDelegateFlowLayout {
 }
 
 // MARK: - UIPageViewController DataSource
-
+//
 extension RankingMainViewController: UIPageViewControllerDataSource {
     public func pageViewController(
         _ pageViewController: UIPageViewController,
@@ -292,7 +299,7 @@ extension RankingMainViewController: UIPageViewControllerDataSource {
 }
 
 // MARK: - UIPageViewController Delegate
-
+//
 extension RankingMainViewController: UIPageViewControllerDelegate {
     public func pageViewController(
         _ pageViewController: UIPageViewController,

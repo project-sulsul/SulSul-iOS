@@ -88,15 +88,19 @@ open class BaseViewController: UIViewController {
                             isSubmitColorYellow: Bool = false,
                             submitCompletion: (() -> Void)?,
                             cancelCompletion: (() -> Void)?) {
-        let alertView = AlertView(alertType: type)
-        alertView.bind(title: title, description: description, cancelText: cancelText, submitText: submitText, submitCompletion: submitCompletion, cancelCompletion: cancelCompletion)
+        
+        guard let topVC = topViewController() else { return }
+        guard !(topVC is AlertViewController) else { return }
+        
+        let alertVC = AlertViewController(alertType: type)
+        alertVC.bind(title: title, description: description, cancelText: cancelText, submitText: submitText, submitCompletion: submitCompletion, cancelCompletion: cancelCompletion)
         
         if isSubmitColorYellow {
-            alertView.submitTouchableLabel.setClickable(true)
+            alertVC.submitTouchableLabel.setClickable(true)
         }
         
-        view.addSubview(alertView)
-        view.bringSubviewToFront(alertView)
+        alertVC.modalPresentationStyle = .overFullScreen
+        topVC.present(alertVC, animated: false)
     }
     
     open func showToastMessageView(toastType: ToastType, title: String, inset: CGFloat? = nil, completion: (() -> Void)? = nil) {
@@ -144,5 +148,24 @@ open class BaseViewController: UIViewController {
                                selectBaseCompletion: baseCompletion)
         view.addSubview(cameraBottomSheet)
         view.bringSubviewToFront(cameraBottomSheet)
+    }
+    
+    public func topViewController() -> UIViewController? {
+        let keyWindow = UIApplication.shared.connectedScenes.flatMap { ($0 as? UIWindowScene)?.windows ?? [] }.last { $0.isKeyWindow }
+        var topVC = keyWindow?.rootViewController
+        
+        while true {
+            if let presented = topVC?.presentedViewController {
+                topVC = presented
+            } else if let navigationController = topVC as? UINavigationController {
+                topVC = navigationController.visibleViewController
+            } else if let tabBarController = topVC as? UITabBarController {
+                topVC = tabBarController.selectedViewController
+            } else {
+                break
+            }
+        }
+        
+        return topVC
     }
 }

@@ -65,6 +65,7 @@ enum CommonScene {
     case search
     case comment
     case detailFeed
+    case combineFeed
     case setting
     case selectSnack
     case selectDrink
@@ -137,6 +138,8 @@ enum ProfileScene {
     case profileEdit
     case selectDrink
     case selectSnack
+    case writeFeed
+    case blockUser
 }
 
 enum ProfileManagementScene {

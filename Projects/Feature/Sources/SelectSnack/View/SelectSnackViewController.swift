@@ -214,7 +214,7 @@ public final class SelectSnackViewController: HiddenTabBarBaseViewController {
             .sink { [weak self] in
                 guard let self = self else { return }
                 if let authCoordinator = self.coordinator as? AuthCoordinator {
-                    authCoordinator.moveTo(appFlow: TabBarFlow.auth(.profileInput(.selectComplete)), userData: nil)
+                    authCoordinator.moveTo(appFlow: TabBarFlow.auth(.profileInput(.selectComplete)), userData: ["userName": viewModel.getUserNickName()])
                 } else if let moreCoordinator = self.coordinator as? MoreCoordinator {
                     self.navigationController?.popViewController(animated: true)
                 }

@@ -34,4 +34,41 @@ public final class CommonUtil {
             }
         }
     }
+    
+    static func topViewController() -> UIViewController? {
+        let keyWindow = UIApplication.shared.connectedScenes.flatMap { ($0 as? UIWindowScene)?.windows ?? [] }.last { $0.isKeyWindow }
+        var topVC = keyWindow?.rootViewController
+        
+        while true {
+            if let presented = topVC?.presentedViewController {
+                topVC = presented
+            } else if let navigationController = topVC as? UINavigationController {
+                topVC = navigationController.visibleViewController
+            } else if let tabBarController = topVC as? UITabBarController {
+                topVC = tabBarController.selectedViewController
+            } else {
+                break
+            }
+        }
+        
+        return topVC
+    }
+    
+    public static func showLoadingView() {
+        guard UIApplication.shared.windows.last?.subviews.contains(where: { $0 is LoadingView }) == false else { return }
+        
+        let loadingView = LoadingView()
+        loadingView.layer.zPosition = CGFloat(Float.greatestFiniteMagnitude)
+        UIApplication.shared.windows.last?.addSubview(loadingView)
+    }
+    
+    public static func hideLoadingView() {
+        if let loadingView = UIApplication.shared.windows.last?.subviews.first(where: { $0 is LoadingView }) {
+            loadingView.removeFromSuperview()
+        } else if let loadingView = UIApplication.shared.windows.first?.subviews.first(where: { $0 is LoadingView }) {
+            loadingView.removeFromSuperview()
+        } else if let topVC = CommonUtil.topViewController(), let loadingView = topVC.view.subviews.first(where: { $0 is LoadingView }) {
+            loadingView.removeFromSuperview()
+        }
+    }
 }

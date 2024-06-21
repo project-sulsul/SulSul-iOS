@@ -8,6 +8,13 @@
 import UIKit
 import DesignSystem
 
+protocol FeedDetailMenuBottomSheetDelegate: AnyObject {
+    func didTapEditFeedView()
+    func didTapDeleteFeedView()
+    func didTapBlockUserView()
+    func didTapReportFeedView()
+}
+
 final class FeedDetailMenuBottomSheet: UIView {
     // MARK: - Properties
     //
@@ -15,9 +22,12 @@ final class FeedDetailMenuBottomSheet: UIView {
         case someone
         case mine
     }
+    
+    weak var delegate: FeedDetailMenuBottomSheetDelegate?
+    
     // MARK: - Components
     //
-    private lazy var backgroundView = TouchableImageView(frame: UIScreen.main.bounds).then {
+    private lazy var dimmedView = TouchableImageView(frame: UIScreen.main.bounds).then {
         $0.backgroundColor = DesignSystemAsset.black.color.withAlphaComponent(0.4)
     }
     
@@ -31,16 +41,23 @@ final class FeedDetailMenuBottomSheet: UIView {
         $0.image = UIImage(named: "edit_feed")
     }
     
+    private lazy var deleteFeedImageView = UIImageView().then {
+        $0.image = UIImage(named: "delete_feed")
+    }
+    
+    private lazy var blockUserImageView = UIImageView().then {
+        $0.image = UIImage(systemName: "nosign")
+        $0.tintColor = DesignSystemAsset.gray900.color
+    }
+    
+    private lazy var reportFeedImageView = UIImageView().then {
+        $0.image = UIImage(named: "report_feed")
+    }
+    
     private lazy var editFeedLabel = UILabel().then {
         $0.text = "게시글 수정하기"
         $0.textColor = DesignSystemAsset.gray900.color
         $0.font = Font.medium(size: 16)
-    }
-    
-    private lazy var editFeedView = UIView()
-    
-    private lazy var deleteFeedImageView = UIImageView().then {
-        $0.image = UIImage(named: "delete_feed")
     }
     
     private lazy var deleteFeedLabel = UILabel().then {
@@ -49,10 +66,10 @@ final class FeedDetailMenuBottomSheet: UIView {
         $0.font = Font.medium(size: 16)
     }
     
-    private lazy var deleteFeedView = UIView()
-    
-    private lazy var reportFeedImageView = UIImageView().then {
-        $0.image = UIImage(named: "report_feed")
+    private lazy var blockUserLabel = UILabel().then {
+        $0.text = "차단하기"
+        $0.textColor = DesignSystemAsset.gray900.color
+        $0.font = Font.medium(size: 16)
     }
     
     private lazy var reportFeedLabel = UILabel().then {
@@ -61,15 +78,21 @@ final class FeedDetailMenuBottomSheet: UIView {
         $0.font = Font.medium(size: 16)
     }
     
-    private lazy var reportFeedView = UIView()
+    override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        
+        self.animate()
+    }
     
     // MARK: - Initializer
     //
-    init(type: SheetType) {
-        super.init(frame: UIScreen.main.bounds)
+    init(sheetType: SheetType) {
+        super.init(frame: .zero)
         
-        self.addViews(withType: type)
-        self.makeConstraints(withType: type)
+        self.backgroundColor = DesignSystemAsset.black.color.withAlphaComponent(0.4)
+        
+        self.addViews(for: sheetType)
+        self.makeConstraints(withType: sheetType)
     }
     
     @available(*, unavailable)
@@ -79,122 +102,106 @@ final class FeedDetailMenuBottomSheet: UIView {
 }
 
 // MARK: - Custom method
-
+//
 extension FeedDetailMenuBottomSheet {
-    public func bind(
-        editHandler: (() -> Void)?,
-        deleteHandler: (() -> Void)?,
-        reportHandler: (() -> Void)?
-    ) {
-        self.backgroundView.onTapped { [weak self] in
-            self?.removeFromSuperview()
-        }
-        self.editFeedView.onTapped { [weak self] in
-            editHandler?()
-            self?.removeFromSuperview()
-        }
-        self.deleteFeedView.onTapped { [weak self] in
-            deleteHandler?()
-            self?.removeFromSuperview()
-        }
-        self.reportFeedView.onTapped { [weak self] in
-            reportHandler?()
-            self?.removeFromSuperview()
+    private func addViews(for sheetType: SheetType) {
+        let sheet = self.createSheet(for: sheetType)
+        
+        self.dimmedView.addSubview(sheet)
+        
+        self.addSubview(self.dimmedView)
+    }
+    
+    private func makeConstraints(withType sheetType: SheetType) {
+        self.containerView.snp.makeConstraints {
+            $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 10))
+            $0.bottom.equalToSuperview().inset(moderateScale(number: 28))
+            $0.height.equalTo(sheetType == .mine ? moderateScale(number: 68) : moderateScale(number: 116))
+//            $0.height.equalTo(moderateScale(number: 68))
         }
     }
     
-    private func addViews(withType type: SheetType) {
-        switch type {
+    private func createSheet(for sheetType: SheetType) -> UIView {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.distribution = .fillEqually
+        stackView.spacing = 12
+        
+        switch sheetType {
         case .mine:
-            self.editFeedView.addSubviews([
-                self.editFeedImageView,
-                self.editFeedLabel
-            ])
+//            let editFeedView = createOptionView(imageView: self.editFeedImageView, label: self.editFeedLabel) { [weak self] in
+//                self?.delegate?.didTapEditFeedView()
+//                self?.removeFromSuperview()
+//            }
+            let deleteFeedView = createOptionView(imageView: self.deleteFeedImageView, label: self.deleteFeedLabel) { [weak self] in
+                self?.delegate?.didTapDeleteFeedView()
+                self?.removeFromSuperview()
+            }
             
-            self.deleteFeedView.addSubviews([
-                self.deleteFeedImageView,
-                self.deleteFeedLabel
-            ])
-            
-            self.containerView.addSubviews([
-                self.editFeedView,
-                self.deleteFeedView
+            stackView.addArrangedSubviews([
+//                editFeedView,
+                deleteFeedView
             ])
         case .someone:
-            self.reportFeedView.addSubviews([
-                self.reportFeedImageView,
-                self.reportFeedLabel
-            ])
+            let blockUserView = createOptionView(imageView: self.blockUserImageView, label: self.blockUserLabel) { [weak self] in
+                self?.delegate?.didTapBlockUserView()
+                self?.removeFromSuperview()
+            }
+            let reportFeedView = createOptionView(imageView: self.reportFeedImageView, label: self.reportFeedLabel) { [weak self] in
+                self?.delegate?.didTapReportFeedView()
+                self?.removeFromSuperview()
+            }
             
-            self.containerView.addSubviews([
-                self.reportFeedView
+            stackView.addArrangedSubviews([
+                blockUserView,
+                reportFeedView
             ])
-            
-            self.containerView.addSubview(self.reportFeedView)
         }
         
-        self.addSubviews([
-            backgroundView,
-            containerView
+        self.dimmedView.onTapped { [weak self] in
+            self?.removeFromSuperview()
+        }
+        
+        self.containerView.addSubview(stackView)
+        
+        stackView.snp.makeConstraints {
+            $0.leading.trailing.equalToSuperview()
+            $0.top.bottom.equalToSuperview().inset(moderateScale(number: 12))
+        }
+        
+        return self.containerView
+    }
+
+    private func createOptionView(imageView: UIImageView, label: UILabel, completion: @escaping () -> Void) -> UIView {
+        let optionView = UIView(frame: .zero)
+        optionView.addSubviews([
+            imageView,
+            label
         ])
+        
+        imageView.snp.makeConstraints {
+            $0.leading.equalToSuperview().inset(moderateScale(number: 24))
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(moderateScale(number: 24))
+        }
+        
+        label.snp.makeConstraints {
+            $0.leading.equalTo(imageView.snp.trailing).offset(moderateScale(number: 8))
+            $0.centerY.equalToSuperview()
+        }
+        
+        optionView.onTapped { completion() }
+        
+        return optionView
     }
     
-    private func makeConstraints(withType type: SheetType) {
-        switch type {
-        case .mine:
-            self.containerView.snp.makeConstraints {
-                $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 10))
-                $0.bottom.equalToSuperview().inset(moderateScale(number: 28))
-                $0.height.equalTo(moderateScale(number: 116))
-            }
-            self.editFeedView.snp.makeConstraints {
-                $0.top.equalToSuperview().offset(moderateScale(number: 12))
-                $0.width.equalToSuperview()
-                $0.height.equalTo(moderateScale(number: 44))
-            }
-            self.deleteFeedView.snp.makeConstraints {
-                $0.top.equalTo(editFeedView.snp.bottom)
-                $0.width.equalTo(self.editFeedView)
-                $0.height.equalTo(self.editFeedView)
-            }
-            self.editFeedImageView.snp.makeConstraints {
-                $0.leading.equalToSuperview().offset(moderateScale(number: 24))
-                $0.centerY.equalToSuperview()
-                $0.size.equalTo(moderateScale(number: 24))
-            }
-            self.deleteFeedImageView.snp.makeConstraints {
-                $0.leading.equalTo(self.editFeedImageView)
-                $0.centerY.equalTo(self.editFeedImageView)
-                $0.size.equalTo(self.editFeedImageView)
-            }
-            self.editFeedLabel.snp.makeConstraints {
-                $0.leading.equalTo(self.editFeedImageView.snp.trailing).offset(moderateScale(number: 8))
-                $0.centerY.equalToSuperview()
-            }
-            self.deleteFeedLabel.snp.makeConstraints {
-                $0.leading.equalTo(self.deleteFeedImageView.snp.trailing).offset(moderateScale(number: 8))
-                $0.centerY.equalToSuperview()
-            }
-        case .someone:
-            self.containerView.snp.makeConstraints {
-                $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 10))
-                $0.bottom.equalToSuperview().inset(moderateScale(number: 28))
-                $0.height.equalTo(moderateScale(number: 68))
-            }
-            self.reportFeedView.snp.makeConstraints {
-                $0.top.equalToSuperview().offset(moderateScale(number: 12))
-                $0.width.equalToSuperview()
-                $0.height.equalTo(moderateScale(number: 44))
-            }
-            self.reportFeedImageView.snp.makeConstraints {
-                $0.leading.equalToSuperview().offset(moderateScale(number: 24))
-                $0.centerY.equalToSuperview()
-                $0.size.equalTo(moderateScale(number: 24))
-            }
-            self.reportFeedLabel.snp.makeConstraints {
-                $0.leading.equalTo(self.reportFeedImageView.snp.trailing).offset(moderateScale(number: 8))
-                $0.centerY.equalToSuperview()
-            }
+    private func animate() {
+        guard let superview = self.superview else { return }
+        
+        self.containerView.transform = CGAffineTransform(translationX: 0, y: superview.frame.height)
+        
+        UIView.animate(withDuration: 0.3) {
+            self.containerView.transform = .identity
         }
     }
 }

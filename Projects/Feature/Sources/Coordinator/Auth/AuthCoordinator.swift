@@ -84,7 +84,8 @@ extension AuthCoordinator {
         currentNavigationViewController?.pushViewController(selectSnackVC, animated: true)
     }
     private func moveToSelectCompleteScene(_ userData: [String: Any]?) {
-        let selectCompleteVC = CompleteViewController()
+        guard let userName = userData?["userName"] as? String else { return }
+        let selectCompleteVC = CompleteViewController(userName: userName)
         selectCompleteVC.coordinator = self
         currentNavigationViewController?.pushViewController(selectCompleteVC, animated: true)
     }

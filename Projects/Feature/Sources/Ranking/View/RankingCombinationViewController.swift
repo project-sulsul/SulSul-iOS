@@ -21,7 +21,7 @@ final class RankingCombinationViewController: BaseViewController {
         $0.showsVerticalScrollIndicator = false
         $0.dataSource = self
         $0.delegate = self
-        $0.register(RankingCombinationCell.self, forCellWithReuseIdentifier: RankingCombinationCell.reuseIdentifier)
+        $0.register(NoChangeRankingCombinationCell.self, forCellWithReuseIdentifier: NoChangeRankingCombinationCell.reuseIdentifier)
     }
     
     private lazy var layout = UICollectionViewCompositionalLayout { (section, environment) -> NSCollectionLayoutSection? in
@@ -90,8 +90,8 @@ extension RankingCombinationViewController: UICollectionViewDataSource {
         _ collectionView: UICollectionView,
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: RankingCombinationCell.reuseIdentifier, for: indexPath) 
-                as? RankingCombinationCell else { return UICollectionViewCell() }
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NoChangeRankingCombinationCell.reuseIdentifier, for: indexPath)
+                as? NoChangeRankingCombinationCell else { return .init() }
         
         if let model = viewModel?.getCombinationDatasource(to: indexPath) { cell.bind(model) }
         

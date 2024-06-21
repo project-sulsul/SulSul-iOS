@@ -9,6 +9,7 @@ import UIKit
 import SnapKit
 import Then
 import DesignSystem
+import Service
 
 enum NoDataType {
     case logOutMyFeed
@@ -79,10 +80,10 @@ final class NoDataCell: UICollectionViewCell {
             messageLabel.text = "즐거운 여정이 시작될 시간!\n로그인 하고 첫 피드를 작성하러 가볼까요?"
             nextLabel.text = "로그인 하러 가기"
         case .logInMyFeed:
-            messageLabel.text = "오늘 먹은 맛있는 조합\n기록하기만 하쇼"
-            nextLabel.text = "피드 작성하러가기"
+            messageLabel.text = "오늘 먹은 맛있는 조합.\n기록하기만 하세요. 분류는 저희가 할게요!"
+            nextLabel.text = "첫 피드 작성하기"
         case .likeFeed:
-            messageLabel.text = "좋아요 표시한 피드가 없네요..."
+            messageLabel.text = "아직 좋아요 표시한 피드가 없어요...\n피드를 찾아볼까요?"
             nextLabel.text = "피드 보러가기"
         }
     }

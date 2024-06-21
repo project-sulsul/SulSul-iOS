@@ -22,7 +22,7 @@ public class BaseWebViewController: BaseViewController {
     var coordinator: CommonBaseCoordinator?
     
     private lazy var topContainerView = UIView().then {
-        $0.backgroundColor = .white
+        $0.backgroundColor = DesignSystemAsset.black.color
     }
     
     private lazy var backTouchableView = TouchableView()
@@ -35,12 +35,13 @@ public class BaseWebViewController: BaseViewController {
     private lazy var titleLabel = UILabel()
     
     private lazy var webViewProgressView = UIProgressView().then {
-        $0.progressTintColor = .purple
+        $0.progressTintColor = DesignSystemAsset.main.color
         $0.trackTintColor = .white
     }
     
     private lazy var webView = WKWebView().then {
         $0.allowsBackForwardNavigationGestures = true
+        $0.overrideUserInterfaceStyle = .dark
         $0.navigationDelegate = self
         $0.scrollView.showsVerticalScrollIndicator = false
     }
@@ -59,6 +60,9 @@ public class BaseWebViewController: BaseViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
+        
+        view.overrideUserInterfaceStyle = .dark
+        view.backgroundColor = DesignSystemAsset.black.color
         
         openWebView(with: url)
     }

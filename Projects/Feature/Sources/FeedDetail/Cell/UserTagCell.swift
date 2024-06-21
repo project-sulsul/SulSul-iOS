@@ -9,6 +9,8 @@ import UIKit
 import DesignSystem
 
 final class UserTagCell: UICollectionViewCell {
+    // MARK: - Properties
+    //
     static let reuseIdentifier: String = "UserTagCell"
     
     // MARK: - Components
@@ -17,6 +19,21 @@ final class UserTagCell: UICollectionViewCell {
         $0.setLineHeight(18, font: Font.regular(size: 12))
         $0.font = Font.regular(size: 12)
         $0.textColor = DesignSystemAsset.gray300.color
+    }
+    
+    override func preferredLayoutAttributesFitting(
+        _ layoutAttributes: UICollectionViewLayoutAttributes
+    ) -> UICollectionViewLayoutAttributes {
+        self.setNeedsLayout()
+        self.layoutIfNeeded()
+        
+        let size = self.contentView.systemLayoutSizeFitting(layoutAttributes.size)
+        
+        var frame = layoutAttributes.frame
+        frame.size = CGSize(width: size.width, height: size.height)
+        layoutAttributes.frame = frame
+        
+        return layoutAttributes
     }
     
     // MARK: - Initializer
@@ -39,14 +56,14 @@ final class UserTagCell: UICollectionViewCell {
 }
 
 // MARK: - Custom Method
-
+//
 extension UserTagCell {
     public func bind(withUserTag text: String) {
         self.tagLabel.text = text
     }
     
     private func addViews() {
-        self.contentView.addSubview(tagLabel)
+        self.contentView.addSubview(self.tagLabel)
     }
     
     private func makeConstraints() {

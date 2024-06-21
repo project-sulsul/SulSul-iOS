@@ -22,6 +22,22 @@ extension UILabel {
         }
     }
     
+    public func setLineHeight(_ lineHeight: CGFloat, text: String? = nil, font: UIFont, hasUnderline: Bool = false) {
+        if let text = text {
+            let style = NSMutableParagraphStyle()
+            let underline = NSUnderlineStyle.single.rawValue
+            
+            if lineHeight > font.lineHeight {
+                style.lineSpacing = lineHeight - font.lineHeight
+            }
+            
+            var attributes: [NSAttributedString.Key: Any] = [.paragraphStyle: style,
+                                                             .font: font, .underlineStyle: hasUnderline ? underline : .zero]
+            
+            self.attributedText = NSAttributedString(string: text, attributes: attributes)
+        }
+    }
+    
     public func asColor(targetString: String, color: UIColor?) {
         let fullText = text ?? ""
         let range = (fullText as NSString).range(of: targetString)

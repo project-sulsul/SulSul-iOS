@@ -48,10 +48,6 @@ final class SelectSnackViewModel {
     }
     
     private func bind() {
-        
-        print(">.>>>>>>>>안주 쪽 아이디")
-        print(userId)
-        
         requestSnackList()
         
         getUserInfo()
@@ -90,10 +86,7 @@ final class SelectSnackViewModel {
                 if let userData = try? self?.jsonDecoder.decode(RemoteUserInfoItem.self, from: response) {
                     guard let mappedUserInfo = self?.userMapper.userInfoModel(from: userData) else { return }
                     self?.userInfo = mappedUserInfo
-                    
                     self?.requestSnackList()
-                    print(">>>>안주쪽에서 조회한 회원정보")
-                    print(self?.userInfo)
                 } else {
                     print("디코딩 모델 에러 9")
                 }
@@ -226,6 +219,10 @@ final class SelectSnackViewModel {
     
     func completeSnackPreferencePublisher() -> AnyPublisher<Void, Never> {
         return completeSnackPreference.eraseToAnyPublisher()
+    }
+    
+    func getUserNickName() -> String {
+        return userInfo?.nickname ?? ""
     }
 }
 

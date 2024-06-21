@@ -8,7 +8,13 @@
 import UIKit
 import DesignSystem
 
+protocol MainPreferenceCellDelegate: AnyObject {
+    func cellIsSelected(_ cell: MainPreferenceCell, feedId: Int)
+}
+
 final class MainPreferenceCell: UICollectionViewCell {
+    
+    weak var delegate: MainPreferenceCellDelegate?
     
     private var alcoholFeed: [AlcoholFeed.Feed] = []
     
@@ -34,7 +40,6 @@ final class MainPreferenceCell: UICollectionViewCell {
     
     private func makeConstraints() {
         collectionView.snp.makeConstraints {
-//            $0.edges.equalToSuperview()
             $0.top.bottom.trailing.equalToSuperview()
             $0.leading.equalToSuperview().offset(moderateScale(number: 20))
         }
@@ -68,6 +73,10 @@ extension MainPreferenceCell: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(MainPreferenceDetailCell.self, indexPath: indexPath) else { return .init() }
         cell.bind(alcoholFeed[indexPath.item])
+        cell.containerView.setOpaqueTapGestureRecognizer { [weak self] in
+            guard let self = self else { return }
+            delegate?.cellIsSelected(self, feedId: alcoholFeed[indexPath.item].feedId)
+        }
         return cell
     }
 }

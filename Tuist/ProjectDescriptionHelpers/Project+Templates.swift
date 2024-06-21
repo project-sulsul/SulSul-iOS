@@ -103,4 +103,5 @@ public extension TargetDependency {
     static let kakaoSDK: TargetDependency = .external(name: "KakaoSDK")
     static let kingfisher: TargetDependency = .external(name: "Kingfisher")
     static let mantis: TargetDependency = .external(name: "Mantis")
+    static let lottie: TargetDependency = .external(name: "Lottie")
 }

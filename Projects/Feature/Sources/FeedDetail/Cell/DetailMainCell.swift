@@ -1,5 +1,5 @@
 //
-//  FeedDetailMainCell.swift
+//  DetailMainCell.swift
 //  Feature
 //
 //  Created by Yujin Kim on 2024-03-14.
@@ -8,7 +8,7 @@
 import UIKit
 import DesignSystem
 
-final class FeedDetailMainCell: UICollectionViewCell {
+final class DetailMainCell: UICollectionViewCell {
     // MARK: - Properties
     //
     static let reuseIdentifier: String = "FeedDetailMainCell"
@@ -19,7 +19,7 @@ final class FeedDetailMainCell: UICollectionViewCell {
         $0.backgroundColor = .clear
     }
     
-    private lazy var userTagCollectionView = UserTagCollectionView(frame: .zero, collectionViewLayout: .init())
+    private lazy var userTagCollectionView = UserTagCollectionView(frame: .zero)
     
     private lazy var indicatorView = UIView().then {
         $0.layer.cornerRadius = CGFloat(2)
@@ -113,21 +113,21 @@ final class FeedDetailMainCell: UICollectionViewCell {
         $0.axis = .horizontal
         $0.spacing = CGFloat(6)
         $0.distribution = .fillEqually
-        $0.addArrangedSubviews([feedViewsImageView, feedViewsLabel])
+        $0.addArrangedSubviews([self.feedViewsImageView, self.feedViewsLabel])
     }
     
     private lazy var feedCommentsStackView = UIStackView().then {
         $0.axis = .horizontal
         $0.spacing = CGFloat(6)
         $0.distribution = .fillEqually
-        $0.addArrangedSubviews([feedCommentsImageView, feedCommentsLabel])
+        $0.addArrangedSubviews([self.feedCommentsImageView, self.feedCommentsLabel])
     }
     
     private lazy var feedLikesStackView = UIStackView().then {
         $0.axis = .horizontal
         $0.spacing = CGFloat(6)
         $0.distribution = .fillEqually
-        $0.addArrangedSubviews([feedLikesImageView, feedLikesLabel])
+        $0.addArrangedSubviews([self.feedLikesImageView, self.feedLikesLabel])
     }
     
     private lazy var separatorView = UIView().then {
@@ -158,18 +158,18 @@ final class FeedDetailMainCell: UICollectionViewCell {
 
 // MARK: - Custom method
 //
-extension FeedDetailMainCell {
+extension DetailMainCell {
     func bind(_ model: FeedDetail) {
         self.carouselView.bind(model)
         
         self.updateScore(to: model.score)
         
-        textView.text = model.content
-        updateTextViewHeight(textView)
+        self.textView.text = model.content
+        self.updateTextViewHeight(textView)
 
-        feedViewsLabel.text = String(model.viewCount)
-        feedCommentsLabel.text = String(model.commentCount)
-        feedLikesLabel.text = String(model.likeCount)
+        self.feedViewsLabel.text = String(model.viewCount)
+        self.feedCommentsLabel.text = String(model.commentCount)
+        self.feedLikesLabel.text = String(model.likeCount)
         
         if let userTags = model.userTags {
             self.updateUserTags(to: userTags)
@@ -178,28 +178,29 @@ extension FeedDetailMainCell {
         }
         
         if let username = model.writerInfo?.nickname {
-            usernameLabel.text = username
+            self.usernameLabel.text = username
         } else {
-            usernameLabel.text = "알 수 없음"
+            self.usernameLabel.text = "알 수 없음"
         }
         
         if let profileImageURL = model.writerInfo?.image,
            let profileImage = URL(string: profileImageURL) {
             profileImageView.loadImage(profileImage)
         } else {
-            print("Image URL is not available.")
-            profileImageView.image = UIImage(named: "detail_profile")
+            self.profileImageView.image = UIImage(named: "detail_profile")
         }
         
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        // 기존 yyyy-MM-dd'T'HH:mm:ss 형식이 아닌 초의 소수점까지 서버에서 전달하고 있음
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
         
         if let createdAtDate = dateFormatter.date(from: model.createdAt) {
             let displayDateFormat = DateFormatter()
             displayDateFormat.dateFormat = "yy.MM.dd"
-            createdAtLabel.text = displayDateFormat.string(from: createdAtDate)
+            
+            self.createdAtLabel.text = displayDateFormat.string(from: createdAtDate)
         } else {
-            createdAtLabel.text = model.createdAt
+            self.createdAtLabel.text = model.createdAt
         }
         
         self.containerView.isHidden = false
@@ -239,60 +240,61 @@ extension FeedDetailMainCell {
         
         self.profileImageView.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(moderateScale(number: 20))
-            $0.top.equalTo(carouselView.snp.bottom).offset(moderateScale(number: 24))
+            $0.top.equalTo(self.carouselView.snp.bottom).offset(moderateScale(number: 24))
             $0.size.equalTo(moderateScale(number: 40))
         }
         
         self.usernameLabel.snp.makeConstraints {
-            $0.leading.equalTo(profileImageView.snp.trailing).offset(moderateScale(number: 12))
-            $0.top.equalTo(carouselView.snp.bottom).offset(moderateScale(number: 24))
+            $0.leading.equalTo(self.profileImageView.snp.trailing).offset(moderateScale(number: 12))
+            $0.top.equalTo(self.carouselView.snp.bottom).offset(moderateScale(number: 24))
         }
         
         self.scoreLabel.snp.makeConstraints {
-            $0.trailing.equalTo(scoreLevelImageView.snp.leading).offset(moderateScale(number: -7.11))
-            $0.top.equalTo(carouselView.snp.bottom).offset(moderateScale(number: 27))
+            $0.trailing.equalTo(self.scoreLevelImageView.snp.leading).offset(moderateScale(number: -7.11))
+            $0.top.equalTo(self.carouselView.snp.bottom).offset(moderateScale(number: 27))
         }
         
         self.scoreLevelImageView.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(moderateScale(number: 20))
-            $0.top.equalTo(scoreLabel)
+            $0.top.equalTo(self.scoreLabel)
         }
         
         self.pairingStackView.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(moderateScale(number: 20))
-            $0.top.equalTo(scoreLabel.snp.bottom).offset(moderateScale(number: 2))
+            $0.top.equalTo(self.scoreLabel.snp.bottom).offset(moderateScale(number: 2))
         }
         
         self.createdAtLabel.snp.makeConstraints {
             $0.leading.equalTo(usernameLabel)
-            $0.top.equalTo(usernameLabel.snp.bottom).offset(moderateScale(number: 8))
+            $0.top.equalTo(self.usernameLabel.snp.bottom).offset(moderateScale(number: 8))
         }
         
         self.textView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 20))
-            $0.top.equalTo(profileImageView.snp.bottom).offset(moderateScale(number: 18))
+            $0.top.equalTo(self.profileImageView.snp.bottom).offset(moderateScale(number: 20))
             $0.height.equalTo(moderateScale(number: 144))
         }
         
         self.userTagCollectionView.snp.makeConstraints {
-            $0.leading.trailing.equalTo(textView)
+            $0.leading.trailing.equalTo(self.textView)
             $0.top.equalTo(self.textView.snp.bottom).offset(moderateScale(number: 32))
-            $0.bottom.equalTo(feedViewsStackView.snp.top).offset(moderateScale(number: -16))
+            $0.bottom.equalTo(self.feedViewsStackView.snp.top).offset(-moderateScale(number: 16))
+            $0.height.lessThanOrEqualTo(moderateScale(number: 48))
         }
         
         self.feedViewsStackView.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(moderateScale(number: 20))
-            $0.bottom.equalTo(separatorView.snp.top).offset(-moderateScale(number: 22))
+            $0.bottom.equalTo(self.separatorView.snp.top).offset(-moderateScale(number: 22))
         }
         
         self.feedCommentsStackView.snp.makeConstraints {
-            $0.leading.equalTo(feedViewsStackView.snp.trailing).offset(moderateScale(number: 16))
-            $0.bottom.equalTo(feedViewsStackView)
+            $0.leading.equalTo(self.feedViewsStackView.snp.trailing).offset(moderateScale(number: 16))
+            $0.bottom.equalTo(self.feedViewsStackView)
         }
         
         self.feedLikesStackView.snp.makeConstraints {
-            $0.leading.equalTo(feedCommentsStackView.snp.trailing).offset(moderateScale(number: 16))
-            $0.bottom.equalTo(feedViewsStackView)
+            $0.leading.equalTo(self.feedCommentsStackView.snp.trailing).offset(moderateScale(number: 16))
+            $0.bottom.equalTo(self.feedViewsStackView)
         }
         
         self.separatorView.snp.makeConstraints {
@@ -306,25 +308,25 @@ extension FeedDetailMainCell {
             self.userTagCollectionView.bind(tags)
         }
         
-        if tags.isEmpty {
+        if tags.isEmpty || tags.first == "#" && tags.count == 1 {
             self.userTagCollectionView.removeFromSuperview()
             
             self.feedViewsStackView.snp.remakeConstraints {
                 $0.leading.equalToSuperview().inset(moderateScale(number: 20))
                 $0.top.equalTo(self.textView.snp.bottom).offset(moderateScale(number: 32))
-                $0.bottom.equalTo(separatorView.snp.top).offset(-moderateScale(number: 22))
+                $0.bottom.equalTo(self.separatorView.snp.top).offset(-moderateScale(number: 22))
             }
             
             self.feedCommentsStackView.snp.remakeConstraints {
-                $0.leading.equalTo(feedViewsStackView.snp.trailing).offset(moderateScale(number: 16))
+                $0.leading.equalTo(self.feedViewsStackView.snp.trailing).offset(moderateScale(number: 16))
                 $0.top.equalTo(self.feedViewsStackView)
                 $0.bottom.equalTo(feedViewsStackView)
             }
             
             self.feedLikesStackView.snp.remakeConstraints {
-                $0.leading.equalTo(feedCommentsStackView.snp.trailing).offset(moderateScale(number: 16))
+                $0.leading.equalTo(self.feedCommentsStackView.snp.trailing).offset(moderateScale(number: 16))
                 $0.top.equalTo(self.feedViewsStackView)
-                $0.bottom.equalTo(feedViewsStackView)
+                $0.bottom.equalTo(self.feedViewsStackView)
             }
         }
     }
@@ -332,23 +334,23 @@ extension FeedDetailMainCell {
     private func updateScore(to score: Int) {
         switch score {
         case 5:
-            scoreLabel.text = "5점"
-            scoreLevelImageView.image = UIImage(named: "score_level_5")
+            self.scoreLabel.text = "5점"
+            self.scoreLevelImageView.image = UIImage(named: "score_level_5")
         case 4:
-            scoreLabel.text = "4점"
-            scoreLevelImageView.image = UIImage(named: "score_level_4")
+            self.scoreLabel.text = "4점"
+            self.scoreLevelImageView.image = UIImage(named: "score_level_4")
         case 3:
-            scoreLabel.text = "3점"
-            scoreLevelImageView.image = UIImage(named: "score_level_3")
+            self.scoreLabel.text = "3점"
+            self.scoreLevelImageView.image = UIImage(named: "score_level_3")
         case 2:
-            scoreLabel.text = "2점"
-            scoreLevelImageView.image = UIImage(named: "score_level_2")
+            self.scoreLabel.text = "2점"
+            self.scoreLevelImageView.image = UIImage(named: "score_level_2")
         case 1:
-            scoreLabel.text = "1점"
-            scoreLevelImageView.image = UIImage(named: "score_level_1")
+            self.scoreLabel.text = "1점"
+            self.scoreLevelImageView.image = UIImage(named: "score_level_1")
         default:
-            scoreLabel.text = "0점"
-            scoreLevelImageView.image = UIImage(named: "score_level_0")
+            self.scoreLabel.text = "0점"
+            self.scoreLevelImageView.image = UIImage(named: "score_level_0")
         }
     }
     
@@ -358,6 +360,7 @@ extension FeedDetailMainCell {
         textView.snp.updateConstraints {
             $0.height.equalTo(contentSize.height)
         }
+        
         self.layoutIfNeeded()
     }
 }

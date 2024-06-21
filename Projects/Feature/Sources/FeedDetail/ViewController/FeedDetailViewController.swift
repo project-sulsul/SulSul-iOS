@@ -10,20 +10,28 @@ import UIKit
 import DesignSystem
 import Service
 
-public final class FeedDetailViewController: BaseViewController {
+public final class FeedDetailViewController: HiddenTabBarBaseViewController {
+    // MARK: - Properties
+    //
     var feedID: Int
     
     private var commentCount = 0
     private var feedUserID = 0
     private var selectedFeedID = 0
-    private var relatedTitle = ""
     private var feedDetailViewModel: FeedDetailViewModel
+    private var detailCommentViewModel: DetailCommentViewModel
+    private var detail: FeedDetail?
     private var cancelBag = Set<AnyCancellable>()
     
+    private let isLogin: Bool = UserDefaultsUtil.shared.isLogin()
+    
+    // MARK: - Components
+    //
     private lazy var baseTopView = BaseTopView()
+    
     private lazy var commentTextFieldView = CommentTextFieldView()
+    
     private lazy var bottomView = UIView().then {
-        $0.frame = .zero
         $0.backgroundColor = DesignSystemAsset.black.color
         $0.layer.shadowOpacity = 1
         $0.layer.shadowOffset = CGSize(width: 0, height: -18)
@@ -59,26 +67,16 @@ public final class FeedDetailViewController: BaseViewController {
         $0.showsVerticalScrollIndicator = false
         $0.dataSource = self
         $0.delegate = self
-        $0.register(FeedDetailMainCell.self, forCellWithReuseIdentifier: FeedDetailMainCell.reuseIdentifier)
-        $0.register(FeedDetailCommentCell.self, forCellWithReuseIdentifier: FeedDetailCommentCell.reuseIdentifier)
+        $0.register(DetailMainCell.self, forCellWithReuseIdentifier: DetailMainCell.reuseIdentifier)
+        $0.register(DetailCommentCell.self, forCellWithReuseIdentifier: DetailCommentCell.reuseIdentifier)
         $0.register(RelatedFeedCell.self, forCellWithReuseIdentifier: RelatedFeedCell.reuseIdentifier)
         $0.registerSupplimentaryView(CommentHeaderView.self, supplementaryViewOfKind: .header)
         $0.registerSupplimentaryView(RelatedFeedHeaderView.self, supplementaryViewOfKind: .header)
         $0.registerSupplimentaryView(CommentFooterView.self, supplementaryViewOfKind: .footer)
     }
     
-    public init(feedID: Int = 0) {
-        self.feedID = feedID
-        self.feedDetailViewModel = FeedDetailViewModel(feedID: feedID)
-        
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    @available(*, unavailable)
-    required public init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+    // MARK: - ViewController Life-cycle
+    //
     public override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -91,9 +89,14 @@ public final class FeedDetailViewController: BaseViewController {
             showNotFoundView()
         }
         
-        self.verifyLoginUser()
         self.addViews()
         self.makeConstraints()
+    }
+    
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        self.cancelBag.removeAll()
     }
     
     public override func addViews() {
@@ -159,7 +162,7 @@ public final class FeedDetailViewController: BaseViewController {
         }
     }
     
-    override public func setupIfNeeded() {
+    public override func setupIfNeeded() {
         self.baseTopView.backTouchableView.onTapped { [weak self] in
             self?.navigationController?.popViewController(animated: true)
         }
@@ -170,7 +173,7 @@ public final class FeedDetailViewController: BaseViewController {
             self.feedDetailViewModel.requestLikeFeed(self.feedID)
             
             feedDetailViewModel
-                .isLikedPublisher
+                .isLikedPublisher()
                 .receive(on: DispatchQueue.main)
                 .sink { value in
                     self.updateLikeTouchableImage(with: value)
@@ -180,9 +183,7 @@ public final class FeedDetailViewController: BaseViewController {
         
         self.menuTouchableImageView.setOpaqueTapGestureRecognizer { [weak self] in
             self?.tabBarController?.setTabBarHidden(true)
-            self?.showFeedDetailMenuBottomSheet(editHandler: self?.editFeed,
-                                                deleteHandler: self?.deleteFeed,
-                                                reportHandler: self?.reportFeed)
+            self?.showFeedDetailMenuBottomSheet()
         }
         
         // 다음 작업 시 코디네이터로 관리할 수 있는 방법을 찾아 수정해보기
@@ -194,25 +195,53 @@ public final class FeedDetailViewController: BaseViewController {
         }
     }
     
+    // MARK: - Initializer
+    //
+    public init(feedID: Int = 0) {
+        self.feedID = feedID
+        self.feedDetailViewModel = FeedDetailViewModel(feedID: feedID)
+        self.detailCommentViewModel = DetailCommentViewModel(feedID: feedID)
+        
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required public init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+// MARK: - Custom method
+//
+extension FeedDetailViewController {
     private func bind() {
-        self.feedDetailViewModel.displayHashtags(withTags: [])
         self.feedDetailViewModel
-            .detailFeedPublisher
+            .detailPublisher()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] value in
-                self?.commentCount = value.commentCount
-                
                 if let userID = value.writerInfo?.userID {
                     self?.feedUserID = userID
                 }
+                
+                self?.detail = value
                 
                 self?.detailCollectionView.reloadData()
                 self?.activityIndicatorView.stopAnimating()
             }
             .store(in: &cancelBag)
         
+        self.detailCommentViewModel
+            .reloadData
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                if let count = self?.detailCommentViewModel.commentsWithoutChildrens.count {
+                    self?.commentCount = count
+                }
+            }
+            .store(in: &cancelBag)
+        
         self.feedDetailViewModel
-            .isLikedPublisher
+            .isLikedPublisher()
             .receive(on: DispatchQueue.main)
             .sink { value in
                 self.updateLikeTouchableImage(with: value)
@@ -231,23 +260,8 @@ public final class FeedDetailViewController: BaseViewController {
         }
     }
     
-    private func verifyLoginUser() {
-        if !UserDefaultsUtil.shared.isLogin() {
-            commentTextFieldView.textField.isEnabled = false
-            commentTextFieldView.onTapped {
-                self.showAlertView(withType: .oneButton,
-                                   title: "알림",
-                                   description: "로그인하면 댓글을 남길 수 있어요.",
-                                   submitCompletion: nil,
-                                   cancelCompletion: nil)
-            }
-        }
-    }
-    
-    // MARK: - 피드 상세보기 좋아요 버튼 표기
     private func updateLikeTouchableImage(with isLiked: Bool) {
-        if UserDefaultsUtil.shared.isLogin(),
-           isLiked {
+        if isLogin, isLiked {
             self.likeTouchableImageView.image = UIImage(named: "heart_filled")
             self.detailCollectionView.reloadData()
         } else {
@@ -256,7 +270,7 @@ public final class FeedDetailViewController: BaseViewController {
     }
     
     private func createLayout() -> UICollectionViewCompositionalLayout {
-        return UICollectionViewCompositionalLayout { sectionIndex, _ in
+        return UICollectionViewCompositionalLayout { (sectionIndex, _) in
             switch sectionIndex {
             case 0:
                 let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .estimated(647))
@@ -271,7 +285,23 @@ public final class FeedDetailViewController: BaseViewController {
                 
                 return section
             case 1:
-                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .fractionalWidth(1))
+                var estimatedHeight: CGFloat = 0
+                
+                if self.commentCount > 1 {
+                    let count = self.commentCount
+                    let splitedAbsoluteHeight: CGFloat = 80
+                    
+                    for _ in 1...count {
+                        estimatedHeight += splitedAbsoluteHeight
+                    }
+                    estimatedHeight = min(estimatedHeight, 428)
+                } else if self.commentCount == 1 {
+                    estimatedHeight = 80
+                } else {
+                    estimatedHeight = 0
+                }
+                
+                let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .estimated(estimatedHeight))
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
                 
                 let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: itemSize.heightDimension)
@@ -287,7 +317,7 @@ public final class FeedDetailViewController: BaseViewController {
                                                                          alignment: .top)
                 
                 let footerSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .estimated(48))
-                let footer = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: footerSize, 
+                let footer = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: footerSize,
                                                                          elementKind: UICollectionView.elementKindSectionFooter,
                                                                          alignment: .bottom)
                 
@@ -320,11 +350,86 @@ public final class FeedDetailViewController: BaseViewController {
             }
         }
     }
-}
-
-// MARK: - Custom method
-
-extension FeedDetailViewController {
+    
+    private func editFeed() {
+        // 피드 수정은 피드 작성 화면을 재활용하는 쪽으로 작업할 것
+        let rewriteContentViewController = RewriteContentViewController(
+            feedID: feedID,
+            title: detail?.title ?? "",
+            content: detail?.content ?? "", 
+            representImage: detail?.representImage ?? "",
+            images: detail?.images ?? [],
+            userTags: detail?.userTags ?? []
+        )
+        
+        self.navigationController?.pushViewController(rewriteContentViewController, animated: true)
+    }
+    
+    /// 현재 로그인한 사용자와 피드를 작성한 사용자가 같은 경우 피드를 삭제할 수 있습니다.
+    ///
+    private func deleteFeed() {
+        self.showAlertView(
+            withType: .twoButton,
+            title: "피드를 삭제할까요?",
+            description: "해당 피드의 모든 내용이 지워져요.",
+            submitText: "삭제하기",
+            submitCompletion: { [weak self] in
+                guard let self = self else { return }
+                
+                let rootVC = self.navigationController?.viewControllers.dropLast().last as? BaseViewController
+                
+                self.feedDetailViewModel.requestDelete()
+                
+                self.feedDetailViewModel.isDeletedPublisher()
+                    .receive(on: DispatchQueue.main)
+                    .sink { isDeleted in
+                        if isDeleted {
+                            rootVC?.showToastMessageView(toastType: .success, title: "피드를 삭제했어요.", inset: 64)
+                            
+                            self.navigationController?.popViewController(animated: true)
+                        } else {
+                            self.showToastMessageView(toastType: .error, title: "피드를 삭제하는 도중 오류가 발생했어요.", inset: 64)
+                        }
+                    }
+                    .store(in: &self.cancelBag)
+            },
+            cancelCompletion: nil
+        )
+    }
+    
+    private func blockUser() {
+        self.showAlertView(
+            withType: .twoButton,
+            title: "사용자를 차단할까요?",
+            description: "차단하면 이 사용자의 게시물이 더이상 노출되지 않아요. 차단해제는 설정에서 할 수 있어요.",
+            submitText: "차단하기",
+            submitCompletion: { [weak self] in
+                guard let self = self else { return }
+                
+                let rootVC = self.navigationController?.viewControllers.dropLast().last as? BaseViewController
+                
+                self.feedDetailViewModel.requestBlockUser(userId: self.feedUserID)
+                
+                self.feedDetailViewModel.isBlockedPublisher()
+                    .receive(on: DispatchQueue.main)
+                    .sink { isBlocked in
+                        if isBlocked {
+                            rootVC?.showToastMessageView(toastType: .success, title: "사용자를 차단했어요.", inset: 64)
+                            
+                            rootVC?.loadViewIfNeeded()
+                            
+                            self.navigationController?.popViewController(animated: true)
+                        }
+                        if !isBlocked {
+                            self.showToastMessageView(toastType: .error, title: "사용자를 차단하는 도중 오류가 발생했어요.", inset: 64)
+                        }
+                    }
+                    .store(in: &self.cancelBag)
+            },
+            cancelCompletion: nil
+        )
+    }
+    
     private func reportFeed() {
         let viewModel = ReportViewModel(reportType: .feed, targetId: feedID)
         let viewController = ReportViewController(viewModel: viewModel,
@@ -334,34 +439,21 @@ extension FeedDetailViewController {
         self.tabBarController?.setTabBarHidden(true)
     }
     
-    private func editFeed() {
-        // 피드 수정
-    }
-    
-    private func deleteFeed() {
-        // 피드 삭제
-    }
-    
-    private func showFeedDetailMenuBottomSheet(
-        editHandler: (() -> Void)?,
-        deleteHandler: (() -> Void)?,
-        reportHandler: (() -> Void)?
-    ) {
+    private func showFeedDetailMenuBottomSheet() {
+        let isLogin = UserDefaultsUtil.shared.isLogin()
         let userID = UserDefaultsUtil.shared.getInstallationId()
         
-        if UserDefaultsUtil.shared.isLogin(), feedUserID == userID {
-            let menuBottomSheet = FeedDetailMenuBottomSheet(type: .mine)
-            menuBottomSheet.bind(editHandler: editHandler,
-                                 deleteHandler: deleteHandler, 
-                                 reportHandler: nil)
+        if isLogin, feedUserID == userID {
+            let menuBottomSheet = FeedDetailMenuBottomSheet(sheetType: .mine)
+            menuBottomSheet.delegate = self
+            menuBottomSheet.frame = view.bounds
             
             self.view.addSubview(menuBottomSheet)
             self.view.bringSubviewToFront(menuBottomSheet)
-        } else if UserDefaultsUtil.shared.isLogin(), feedUserID != userID {
-            let menuBottomSheet = FeedDetailMenuBottomSheet(type: .someone)
-            menuBottomSheet.bind(editHandler: nil,
-                                 deleteHandler: nil,
-                                 reportHandler: reportHandler)
+        } else if isLogin, feedUserID != userID {
+            let menuBottomSheet = FeedDetailMenuBottomSheet(sheetType: .someone)
+            menuBottomSheet.delegate = self
+            menuBottomSheet.frame = view.bounds
             
             self.view.addSubview(menuBottomSheet)
             self.view.bringSubviewToFront(menuBottomSheet)
@@ -372,7 +464,7 @@ extension FeedDetailViewController {
 }
 
 // MARK: - UICollectionView Datasource
-
+//
 extension FeedDetailViewController: UICollectionViewDataSource {
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
         // 피드 내용, 피드 댓글, 연관 피드
@@ -406,28 +498,28 @@ extension FeedDetailViewController: UICollectionViewDataSource {
         switch indexPath.section {
         // 피드의 상세 콘텐츠를 보여주는 DetailFeedMainCell
         case 0:
-            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedDetailMainCell.reuseIdentifier, for: indexPath) as? FeedDetailMainCell 
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: DetailMainCell.reuseIdentifier, for: indexPath) as? DetailMainCell 
             else { return .init() }
             
             feedDetailViewModel
-                .detailFeedPublisher
+                .detailPublisher()
                 .sink { model in cell.bind(model) }
                 .store(in: &cancelBag)
             
             feedDetailViewModel
-                .pairingDrinkPublisher
+                .pairingDrinkPublisher()
                 .sink { value in cell.pairingStackView.drinkLabel.text = value }
                 .store(in: &cancelBag)
             
             feedDetailViewModel
-                .pairingSnackPublisher
+                .pairingSnackPublisher()
                 .sink { value in cell.pairingStackView.snackLabel.text = value }
                 .store(in: &cancelBag)
             
             return cell
         // 피드의 댓글 중 5개까지만 보여주는 DetailFeedCommentCell
         case 1:
-            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeedDetailCommentCell.reuseIdentifier, for: indexPath) as? FeedDetailCommentCell 
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: DetailCommentCell.reuseIdentifier, for: indexPath) as? DetailCommentCell 
             else { return .init() }
             
             cell.bind(withID: self.feedID)
@@ -489,7 +581,7 @@ extension FeedDetailViewController: UICollectionViewDataSource {
 }
 
 // MARK: - UICollectionView Delegate
-
+//
 extension FeedDetailViewController: UICollectionViewDelegate {
     public func collectionView(
         _ collectionView: UICollectionView,
@@ -504,6 +596,28 @@ extension FeedDetailViewController: UICollectionViewDelegate {
     }
 }
 
+// MARK: - FeedDetailMenuBottomSheet Delegate
+//
+extension FeedDetailViewController: FeedDetailMenuBottomSheetDelegate {
+    func didTapEditFeedView() {
+        self.editFeed()
+    }
+    
+    func didTapDeleteFeedView() {
+        self.deleteFeed()
+    }
+    
+    func didTapBlockUserView() {
+        self.blockUser()
+    }
+    
+    func didTapReportFeedView() {
+        self.reportFeed()
+    }
+}
+
+// MARK: - ReportViewController Delegate
+//
 extension FeedDetailViewController: ReportViewControllerDelegate {
     func reportIsComplete() {
         self.showToastMessageView(toastType: .success, title: "정상적으로 신고가 접수되었어요.")

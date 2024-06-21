@@ -5,27 +5,29 @@
 //  Created by Yujin Kim on 2024-01-05.
 //
 
-import Combine
 import UIKit
+import Combine
 import DesignSystem
 
-/// 술 순위를 보여주는 뷰 컨트롤러
 final class RankingDrinkViewController: BaseViewController {
+    // MARK: - Properties
+    //
     var coordinator: RankingBaseCoordinator?
     var viewModel: RankingDrinkViewModel?
     
     private var cancelBag = Set<AnyCancellable>()
     
+    // MARK: - Components
+    //
     private lazy var rankingDrinkCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout).then {
         $0.backgroundColor = .clear
         $0.showsVerticalScrollIndicator = false
+        $0.register(NoChangeRankingDrinkCell.self, forCellWithReuseIdentifier: NoChangeRankingDrinkCell.reuseIdentifier)
         $0.dataSource = self
-        $0.delegate = self
-        $0.register(RankingDrinkCell.self, forCellWithReuseIdentifier: RankingDrinkCell.reuseIdentifier)
     }
     
-    private lazy var layout = UICollectionViewCompositionalLayout { (section, environment) -> NSCollectionLayoutSection? in
-        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), 
+    private lazy var layout = UICollectionViewCompositionalLayout { (section, _) -> NSCollectionLayoutSection? in
+        let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
                                               heightDimension: .fractionalHeight(1.0))
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         
@@ -40,32 +42,47 @@ final class RankingDrinkViewController: BaseViewController {
         return section
     }
     
+    // MARK: - ViewController Life-cycle
+    //
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        viewModel = RankingDrinkViewModel()
-        
-        bind()
-        addViews()
-        makeConstraints()
+        self.bind()
+        self.addViews()
+        self.makeConstraints()
     }
     
     override func addViews() {
-        view.addSubview(rankingDrinkCollectionView)
+        self.view.addSubview(rankingDrinkCollectionView)
     }
     
     override func makeConstraints() {
-        rankingDrinkCollectionView.snp.makeConstraints {
+        self.rankingDrinkCollectionView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
     }
     
-    // MARK: - Custom Method
-    
-    private func bind() {
-        viewModel?.requestRankingAlcohol()
+    // MARK: - Initializer
+    //
+    init() {
+        self.viewModel = RankingDrinkViewModel()
         
-        viewModel?
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+// MARK: - Custom Method
+//
+extension RankingDrinkViewController {
+    private func bind() {
+        self.viewModel?.requestRankingAlcohol()
+        
+        self.viewModel?
             .rankingDrinkPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] value in
@@ -76,38 +93,26 @@ final class RankingDrinkViewController: BaseViewController {
     }
 }
 
-// MARK: - Drink CollectionView DataSource
-
+// MARK: - UICollectionView DataSource
+//
 extension RankingDrinkViewController: UICollectionViewDataSource {
     func collectionView(
         _ collectionView: UICollectionView,
         numberOfItemsInSection section: Int
     ) -> Int {
-        return viewModel?.drinkDatasourceCount() ?? 0
+        return self.viewModel?.drinkDatasourceCount() ?? 0
     }
     
     func collectionView(
         _ collectionView: UICollectionView,
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: RankingDrinkCell.reuseIdentifier, for: indexPath) as? RankingDrinkCell else {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NoChangeRankingDrinkCell.reuseIdentifier, for: indexPath) as? NoChangeRankingDrinkCell else {
             return UICollectionViewCell()
         }
         
-        if let model = viewModel?.getDrinkDatasource(to: indexPath) { cell.bind(model) }
+        if let model = self.viewModel?.getDrinkDatasource(to: indexPath) { cell.bind(model) }
         
         return cell
-    }
-}
-
-// MARK: - Drink CollectionView Delegate
-
-extension RankingDrinkViewController: UICollectionViewDelegate {
-    func collectionView(
-        _ collectionView: UICollectionView,
-        didSelectItemAt indexPath: IndexPath
-    ) {
-//        self.coordinator?.moveTo(appFlow: TabBarFlow.ranking(.detailDrink), userData: nil)
-        #warning("술 상세 화면 MVP에서 제외")
     }
 }

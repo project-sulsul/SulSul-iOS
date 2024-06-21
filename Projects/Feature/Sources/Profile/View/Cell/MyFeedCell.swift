@@ -203,10 +203,28 @@ final class MyFeedCell: BaseCollectionViewCell<Feed> {
             feedImageView.kf.setImage(with: imageURL)
         }
         
+//        1. Ms 저장되는 이슈
+//        2. 시간 저장이 제대로 되지 않는 이슈
+//        3. 메인 취향쪽 간헐적으로만 보이는 이슈(자동 로그아웃 되서 그런가..?)
+        print(">>>>")
+        print(model)
+        
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        if let date = dateFormatter.date(from: model.createdAt) {
-            dateLabel.text = date.relativeDate(.MM월dd일요일)
+        
+        if let index = model.createdAt.range(of: ".")?.lowerBound {
+            let dateString = String(model.createdAt.prefix(upTo: index))
+            if let date = dateFormatter.date(from: dateString) {
+                dateLabel.text = date.relativeDate(.MM월dd일요일)
+            } else {
+                dateLabel.text = "날짜 포맷 오류"
+            }
+        } else {
+            if let date = dateFormatter.date(from: model.createdAt) {
+                dateLabel.text = date.relativeDate(.MM월dd일요일)
+            } else {
+                dateLabel.text = "날짜 포맷 오류"
+            }
         }
     }
 }

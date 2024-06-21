@@ -15,7 +15,12 @@ enum MyFeedState {
     case notLogin
 }
 
+protocol MyFeedViewDelegate: AnyObject {
+    func didTapNextLabel()
+}
+
 class MyFeedView: UIView {
+    weak var delegate: MyFeedViewDelegate?
     
     private var cancelBag = Set<AnyCancellable>()
     private var viewModel: ProfileMainViewModel
@@ -77,25 +82,28 @@ class MyFeedView: UIView {
     
     private func layout() -> UICollectionViewCompositionalLayout {
         return UICollectionViewCompositionalLayout { [weak self] _, _ in
-            guard let self = self else { return nil }
-            
             let itemWidth: CGFloat = 1
             let itemHeight: CGFloat
-            switch myFeedState {
+            
+            switch self?.myFeedState {
             case .loginFeedExist:
                 itemHeight = 611
-            case .loginFeedNotExist:
-                itemHeight = 400
-            case .notLogin:
+            case .loginFeedNotExist, .notLogin:
                 itemHeight = 400
             case nil:
-                return nil
+                itemHeight = 0
             }
             
             let itemSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(itemWidth),
                                                   heightDimension: .estimated(moderateScale(number: itemHeight)))
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
-            item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0)
+            
+            switch self?.myFeedState {
+            case .loginFeedExist, .loginFeedNotExist:
+                item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0)
+            case .notLogin, .none:
+                break
+            }
         
             let groupSize = NSCollectionLayoutSize(widthDimension: .fractionalWidth(1),
                                                    heightDimension: .estimated(moderateScale(number: itemHeight)))
@@ -141,7 +149,9 @@ extension MyFeedView: UICollectionViewDelegate, UICollectionViewDataSource {
             guard let cell = collectionView.dequeueReusableCell(NoDataCell.self, indexPath: indexPath) else { return .init() }
             cell.updateView(withType: .logInMyFeed)
             cell.nextLabel.setOpaqueTapGestureRecognizer { [weak self] in
-                print("피드가 없음")
+                guard let self = self else { return }
+                
+                self.delegate?.didTapNextLabel()
             }
             
             return cell

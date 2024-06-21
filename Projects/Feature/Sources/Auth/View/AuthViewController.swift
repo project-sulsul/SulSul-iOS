@@ -113,6 +113,7 @@ public final class AuthViewController: HiddenTabBarBaseViewController {
             .dropFirst()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] error in
+                guard self?.topViewController() is Self else { return }
                 self?.showAlertView(withType: .oneButton,
                                     title: error,
                                     description: error,

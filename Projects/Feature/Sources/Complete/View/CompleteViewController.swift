@@ -10,7 +10,17 @@ import UIKit
 
 public final class CompleteViewController: BaseViewController {
     var coordinator: AuthBaseCoordinator?
-    var username = "보라색하이볼"
+    private let userName: String
+    
+    init(userName: String) {
+        self.userName = userName
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     private lazy var topView = UIView().then {
         $0.frame = .zero
@@ -27,7 +37,6 @@ public final class CompleteViewController: BaseViewController {
     }
     
     private lazy var subtitleLabel = UILabel().then {
-        $0.text = "\(username)님이 선택해주신 취향으로\n추천해드릴게요!"
         $0.textColor = DesignSystemAsset.gray900.color
         $0.setLineHeight(28, font: Font.medium(size: 18))
         $0.numberOfLines = 2
@@ -54,9 +63,7 @@ public final class CompleteViewController: BaseViewController {
     public override func viewDidLoad() {
         view.backgroundColor = DesignSystemAsset.black.color
         overrideUserInterfaceStyle = .dark
-        
-        addViews()
-        makeConstraints()
+        super.viewDidLoad()
     }
     
     public override func addViews() {
@@ -97,6 +104,10 @@ public final class CompleteViewController: BaseViewController {
             $0.top.equalToSuperview()
             $0.height.equalTo(moderateScale(number: 52))
         }
+    }
+    
+    public override func setupIfNeeded() {
+        self.subtitleLabel.text = "\(userName)님이 선택해주신 취향으로\n추천해드릴게요!"
     }
 }
 

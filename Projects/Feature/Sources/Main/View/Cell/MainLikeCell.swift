@@ -111,9 +111,11 @@ final class MainLikeCell: UICollectionViewCell {
             if let url = URL(string: feed.feeds[index].representImage ?? "") {
                 if index <= imageViews.count {
                     imageViews[index].kf.setImage(with: url)
+                } else {
+                    imageViews[index].image = UIImage(systemName: "circle.fill")
                 }
             } else {
-                print("사진 없어")
+                imageViews[index].image = UIImage(systemName: "circle.fill")
             }
         }
     }

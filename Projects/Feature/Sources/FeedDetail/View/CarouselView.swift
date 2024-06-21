@@ -34,20 +34,23 @@ final class CarouselView: UIView {
         $0.layer.masksToBounds = true
     }
     
-    private lazy var imageIndexLabel = PaddableLabel(edgeInsets: 2, 8, 2, 8).then {
+    private lazy var imageIndexLabel = PaddableLabel(edgeInsets: 4, 8, 4, 8).then {
         $0.setLineHeight(18, font: Font.regular(size: 12))
+        $0.lineBreakMode = .byCharWrapping
+        $0.numberOfLines = 0
         $0.font = Font.regular(size: 12)
         $0.textColor = DesignSystemAsset.gray900.color
         $0.backgroundColor = DesignSystemAsset.gray200.color
         $0.layer.cornerRadius = 8
         $0.layer.masksToBounds = true
+        $0.clipsToBounds = true
     }
     
     private lazy var titleLabel = UILabel().then {
         $0.setLineHeight(36, font: Font.bold(size: 24))
+        $0.lineBreakMode = .byCharWrapping
         $0.font = Font.bold(size: 24)
         $0.textColor = DesignSystemAsset.white.color
-        $0.numberOfLines = 2
         $0.sizeToFit()
     }
     
@@ -76,18 +79,24 @@ extension CarouselView {
     func bind(_ model: FeedDetail) {
         var feedImages = model.images
         feedImages.insert(model.representImage, at: 0)
-        
         feedImages.forEach { image in
             if let imageURL = URL(string: image) {
-                let imageView = UIImageView(frame: .zero)
-                imageView.backgroundColor = DesignSystemAsset.black.color.withAlphaComponent(0.2)
-                imageView.contentMode = .scaleAspectFill
-                imageView.layer.backgroundColor = DesignSystemAsset.black.color.cgColor.copy(alpha: 0.2)
-                imageView.layer.cornerRadius = 20
-                imageView.layer.masksToBounds = true
-                imageView.kf.setImage(with: imageURL)
+                let blendView = UIView(frame: .zero).then {
+                    $0.backgroundColor = DesignSystemAsset.black.color.withAlphaComponent(0.2)
+                }
+                let imageView = UIImageView(frame: .zero).then {
+                    $0.contentMode = .scaleAspectFill
+                    $0.layer.cornerRadius = 20
+                    $0.layer.masksToBounds = true
+                    $0.kf.setImage(with: imageURL)
+                    $0.addSubview(blendView)
+                }
                 
                 self.imageStackView.addArrangedSubview(imageView)
+                
+                blendView.snp.makeConstraints {
+                    $0.edges.equalToSuperview()
+                }
                 
                 imageView.snp.makeConstraints {
                     $0.width.equalTo(self.scrollView.snp.width)
@@ -111,7 +120,7 @@ extension CarouselView {
     }
     
     private func addViews() {
-        self.scrollView.addSubview(imageStackView)
+        self.scrollView.addSubview(self.imageStackView)
         
         self.addSubviews([
             self.scrollView,
@@ -135,12 +144,14 @@ extension CarouselView {
         
         self.imageIndexLabel.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(moderateScale(number: 18))
-            $0.top.equalToSuperview().offset(moderateScale(number: 239))
+//            $0.top.equalToSuperview().offset(moderateScale(number: 239))
             $0.bottom.equalTo(self.titleLabel.snp.top).offset(-moderateScale(number: 4))
+            $0.height.lessThanOrEqualTo(moderateScale(number: 22))
         }
         
         self.titleLabel.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 18))
+            $0.bottom.equalToSuperview().offset(-moderateScale(number: 32))
         }
     }
     
@@ -150,7 +161,7 @@ extension CarouselView {
 }
 
 // MARK: - UIScrollView Delegate
-
+//
 extension CarouselView: UIScrollViewDelegate {
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         let scrollViewWidth = scrollView.frame.size.width
@@ -164,7 +175,6 @@ extension CarouselView: UIScrollViewDelegate {
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         // 스크롤 되었을 때마다 이미지 인디케이터가 움직이고 라벨 값을 갱신
-        //
         let scrollViewWidth = scrollView.frame.size.width
         let contentOffsetX = scrollView.contentOffset.x
         let currentIndex = Int(scrollView.contentOffset.x / scrollViewWidth) + 1

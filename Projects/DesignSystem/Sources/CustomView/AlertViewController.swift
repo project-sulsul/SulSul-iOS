@@ -1,13 +1,11 @@
 //
-//  AlertView.swift
+//  AlertViewController.swift
 //  DesignSystem
 //
-//  Created by 이범준 on 12/9/23.
+//  Created by 이범준 on 2024/05/09.
 //
 
 import UIKit
-import SnapKit
-import Then
 
 public enum AlertType {
     case oneButton
@@ -15,7 +13,8 @@ public enum AlertType {
     case verticalTwoButton
 }
 
-final class AlertView: UIView {
+final class AlertViewController: UIViewController {
+    
     private lazy var backgroundView = UIView(frame: UIScreen.main.bounds).then {
         $0.backgroundColor = .black.withAlphaComponent(0.4)
     }
@@ -61,7 +60,7 @@ final class AlertView: UIView {
     
     init(alertType: AlertType) {
         self.alertType = alertType
-        super.init(frame: UIScreen.main.bounds)
+        super.init(nibName: nil, bundle: nil)
         
         addViews()
         makeConstraints()
@@ -72,43 +71,8 @@ final class AlertView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func bind(title: String,
-              description: String?,
-              cancelText: String?,
-              submitText: String?,
-              submitCompletion: (() -> Void)?,
-              cancelCompletion: (() -> Void)?) {
-        
-        submitTouchableLabel.onTapped { [weak self] in
-            submitCompletion?()
-            self?.removeFromSuperview()
-        }
-        
-        cancelTouchableLabel.onTapped { [weak self] in
-            cancelCompletion?()
-            self?.removeFromSuperview()
-        }
-        
-        titleLabel.text = title
-        
-        if let subTitle = description {
-            descriptionLabel.isHidden = false
-            descriptionLabel.text = subTitle
-        } else {
-            descriptionLabel.isHidden = true
-        }
-        
-        if let cancelText = cancelText {
-            cancelTouchableLabel.title(cancelText)
-        }
-        
-        if let submitText = submitText {
-            submitTouchableLabel.title(submitText)
-        }
-    }
-    
     private func addViews() {
-        addSubviews([backgroundView, containerView])
+        view.addSubviews([backgroundView, containerView])
         containerView.addSubviews([titleStackView, cancelTouchableLabel, submitTouchableLabel])
         titleStackView.addArrangedSubviews([titleLabel, descriptionLabel])
     }
@@ -160,6 +124,41 @@ final class AlertView: UIView {
         
         titleStackView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
+        }
+    }
+    
+    func bind(title: String,
+              description: String?,
+              cancelText: String?,
+              submitText: String?,
+              submitCompletion: (() -> Void)?,
+              cancelCompletion: (() -> Void)?) {
+        
+        submitTouchableLabel.onTapped { [weak self] in
+            self?.dismiss(animated: false)
+            submitCompletion?()
+        }
+        
+        cancelTouchableLabel.onTapped { [weak self] in
+            self?.dismiss(animated: false)
+            cancelCompletion?()
+        }
+        
+        titleLabel.text = title
+        
+        if let subTitle = description {
+            descriptionLabel.isHidden = false
+            descriptionLabel.text = subTitle
+        } else {
+            descriptionLabel.isHidden = true
+        }
+        
+        if let cancelText = cancelText {
+            cancelTouchableLabel.title(cancelText)
+        }
+        
+        if let submitText = submitText {
+            submitTouchableLabel.title(submitText)
         }
     }
 }

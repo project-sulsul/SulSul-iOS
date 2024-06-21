@@ -13,12 +13,15 @@ public struct UserDefaultsUtil {
     private init() {}
     
     private let defaults = UserDefaults.standard
+    private let jsonDecoder = JSONDecoder()
+    private let jsonEncoder = JSONEncoder()
     
     public enum UserDefaultKey: String {
         case userId
         case recentKeyword
         case feedTitle
         case feedContent
+        case blockUser
     }
     
     public func isLogin() -> Bool {
@@ -70,5 +73,38 @@ public struct UserDefaultsUtil {
             UserDefaults.standard.synchronize()
         }
         return isFirstLaunch
+    }
+}
+
+// MARK: - Generics for Feature module
+//
+extension UserDefaultsUtil {
+    public func setObject<T: Codable>(_ object: T, forkey key: UserDefaultKey) {
+        var objects = getObjects(T.self, forKey: key) ?? []
+        objects.append(object)
+        
+        if let data = try? self.jsonEncoder.encode(objects) {
+            defaults.setValue(data, forKey: UserDefaultKey.blockUser.rawValue)
+        }
+    }
+    
+    public func getObjects<T: Codable>(_ type: T.Type, forKey key: UserDefaultKey) -> [T]? {
+        if let data = defaults.data(forKey: key.rawValue),
+           let objects = try? self.jsonDecoder.decode([T].self, from: data) {
+            return objects
+        }
+        
+        return nil
+    }
+    
+    public func removeObject<T: Codable & Equatable>(_ object: T, forKey key: UserDefaultKey) {
+        var objects = getObjects(T.self, forKey: key) ?? []
+        
+        if let index = objects.firstIndex(of: object) {
+            objects.remove(at: index)
+            if let data = try? jsonEncoder.encode(objects) {
+                defaults.setValue(data, forKey: key.rawValue)
+            }
+        }
     }
 }

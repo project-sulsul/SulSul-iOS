@@ -62,6 +62,21 @@ final class MoreCoordinator: NSObject, MoreBaseCoordinator {
                                                           selectTasteCase: .store)
             selectSnackVC.coordinator = self
             currentNavigationViewController?.pushViewController(selectSnackVC, animated: false)
+        case .writeFeed:
+            let writeFeedCoordinator = CommonCoordinator()
+            writeFeedCoordinator.parentCoordinator = self
+            
+            let writeFeedVC = WriteTitleViewController()
+            writeFeedVC.coordinator = writeFeedCoordinator
+            
+            currentNavigationViewController?.pushViewController(writeFeedVC, animated: true)
+        case .blockUser:
+            let viewModel = BlockUserViewModel()
+            let blockUserVC = BlockUserViewController(viewModel: viewModel)
+            
+            blockUserVC.coordinator = self
+            currentNavigationViewController?.interactivePopGestureRecognizer?.isEnabled = true
+            currentNavigationViewController?.pushViewController(blockUserVC, animated: true)
         }
     }
 }

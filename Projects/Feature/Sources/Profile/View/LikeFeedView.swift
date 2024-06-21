@@ -107,6 +107,10 @@ class LikeFeedView: UIView {
         self.likeFeedState = likeFeedState
         collectionView.reloadData()
     }
+    
+    func moveToTabBarIndex(index: Int) {
+        self.tabBarController.selectedIndex = index
+    }
 }
 
 extension LikeFeedView: UICollectionViewDelegate, UICollectionViewDataSource {
@@ -138,7 +142,7 @@ extension LikeFeedView: UICollectionViewDelegate, UICollectionViewDataSource {
             guard let cell = collectionView.dequeueReusableCell(NoDataCell.self, indexPath: indexPath) else { return .init() }
             cell.updateView(withType: .likeFeed)
             cell.nextLabel.setOpaqueTapGestureRecognizer { [weak self] in
-                print("피드가 없음")
+                self?.moveToTabBarIndex(index: 3)
             }
             
             return cell
