@@ -13,7 +13,7 @@ open class SelectTasteBaseViewController: BaseViewController {
 
     var buttonBottomConstraint: Constraint?
     
-    lazy var topView = BaseTopView()
+    public lazy var topView = BaseTopView()
     
     public lazy var nextButtonBackgroundView = UIView().then {
         $0.backgroundColor = DesignSystemAsset.black.color
@@ -25,19 +25,25 @@ open class SelectTasteBaseViewController: BaseViewController {
     
     public lazy var submitTouchableLabel = IndicatorTouchableView().then {
         $0.text = "다음"
-        $0.textColor = DesignSystemAsset.gray200.color
-        $0.backgroundColor = DesignSystemAsset.main.color
+        $0.textColor = DesignSystemAsset.gray300.color
+        $0.backgroundColor = DesignSystemAsset.gray100.color
         $0.layer.cornerRadius = moderateScale(number: 12)
         $0.clipsToBounds = true
     }
     
+    open override func viewDidLoad() {
+        super.viewDidLoad()
+    }
+    
     open override func addViews() {
+        super.addViews()
         view.addSubviews([topView,
                           nextButtonBackgroundView])
         nextButtonBackgroundView.addSubview(submitTouchableLabel)
     }
     
     open override func makeConstraints() {
+        super.makeConstraints()
         topView.snp.makeConstraints {
             $0.top.equalToSuperview().inset(getSafeAreaTop())
             $0.leading.trailing.equalToSuperview()

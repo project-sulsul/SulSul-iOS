@@ -9,23 +9,18 @@ import UIKit
 import SnapKit
 import Then
 
-final class BaseTopView: UIView {
-    lazy var backTouchableView = TouchableView()
+public final class BaseTopView: UIView {
+    public lazy var backTouchableView = TouchableView()
     
     private lazy var backImageView = UIImageView().then {
-        $0.image = UIImage(named: "BackButton")
+        $0.image = UIImage(named: "common_leftArrow")
         $0.contentMode = .scaleAspectFit
     }
     
-    lazy var closeTouchableView = TouchableView().then {
-        $0.isHidden = true
-    }
-    
-    private lazy var closeImageView = UIImageView().then {
-        $0.image = UIImage(named: "CloseButton")
-        $0.contentMode = .scaleAspectFit
-        
-    }
+    private lazy var titleLabel = UILabel().then({
+        $0.font = Font.bold(size: 18)
+        $0.textColor = DesignSystemAsset.gray900.color
+    })
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -39,16 +34,13 @@ final class BaseTopView: UIView {
     }
     
     private func attribute() {
-        let buttonMargin: CGFloat = 5
-        
-        addSubviews([backTouchableView, closeTouchableView])
-        backTouchableView.addSubview(backImageView)
-        closeTouchableView.addSubview(closeImageView)
+        addSubviews([backTouchableView])
+        backTouchableView.addSubviews([backImageView, titleLabel])
         
         backTouchableView.snp.makeConstraints {
-            $0.leading.equalToSuperview().inset(moderateScale(number: 20 - buttonMargin))
-            $0.top.equalToSuperview().inset(moderateScale(number: 16 - buttonMargin))
-            $0.size.equalTo(moderateScale(number: buttonMargin + 24 + buttonMargin))
+            $0.leading.equalToSuperview().inset(moderateScale(number: 20))
+            $0.centerY.equalToSuperview()
+            $0.size.equalTo(moderateScale(number: 24))
         }
         
         backImageView.snp.makeConstraints {
@@ -56,15 +48,13 @@ final class BaseTopView: UIView {
             $0.size.equalTo(moderateScale(number: 24))
         }
         
-        closeTouchableView.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(moderateScale(number: 20 - buttonMargin))
-            $0.top.equalToSuperview().inset(moderateScale(number: 16 - buttonMargin))
-            $0.size.equalTo(moderateScale(number: buttonMargin + 24 + buttonMargin))
+        titleLabel.snp.makeConstraints {
+            $0.centerY.equalToSuperview()
+            $0.leading.equalTo(backImageView.snp.trailing).offset(moderateScale(number: 8))
         }
-        
-        closeImageView.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.size.equalTo(moderateScale(number: 24))
-        }
+    }
+    
+    public func setTitle(_ title: String) {
+        titleLabel.text = title
     }
 }

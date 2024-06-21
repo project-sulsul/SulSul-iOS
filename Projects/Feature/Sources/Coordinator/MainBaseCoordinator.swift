@@ -12,6 +12,6 @@ public protocol MainBaseCoordinator: Coordinator {
     var mainTabBar: UITabBarController? { get }
 }
 
-protocol MainBaseCoordinated {
+public protocol MainBaseCoordinated {
     var coordinator: MainBaseCoordinator? { get }
 }

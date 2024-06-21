@@ -7,9 +7,8 @@
 
 import UIKit
 
-// TODO: 피그마 확인 후 가이드 값 수정
-let baseGuideWidth: CGFloat = 375.0
-let baseGuideHeight: CGFloat = 667.0
+let baseGuideWidth: CGFloat = 393.0
+let baseGuideHeight: CGFloat = 852.0
 
 @inline(__always)
 public func horizontalScale(number: CGFloat) -> CGFloat {

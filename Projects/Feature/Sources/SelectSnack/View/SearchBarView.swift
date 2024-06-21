@@ -25,9 +25,10 @@ final class SearchBarView: UIView {
         $0.addTarget(self, action: #selector(handleTextFieldDidChange), for: .editingChanged)
         $0.placeholder = "안주이름을 검색해보세요"
         $0.textColor = .white
+        $0.font = Font.semiBold(size: 16)
     }
     
-    init(delegate: SearchSnack) {
+    init(delegate: SearchSnack?) {
         super.init(frame: .zero)
         
         self.delegate = delegate

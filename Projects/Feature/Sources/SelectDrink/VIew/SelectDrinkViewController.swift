@@ -9,17 +9,38 @@ import UIKit
 import DesignSystem
 import Combine
 
+enum SelectTasteCase {
+    case next
+    case store
+    case bottomSheet
+}
+
 public class SelectDrinkViewController: SelectTasteBaseViewController {
     
+    var coordinator: Coordinator?
     var cancelBag = Set<AnyCancellable>()
-    private let viewModel = SelectDrinkViewModel()
-
+    
+    private let viewModel: SelectDrinkViewModel
+    private let selectTasteCase: SelectTasteCase
+    
+    init(viewModel: SelectDrinkViewModel, selectTasteCase: SelectTasteCase) {
+        self.selectTasteCase = selectTasteCase
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+        hidesBottomBarWhenPushed = true
+    }
+    
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     private lazy var containerView = UIView()
     
     private lazy var numberLabel = UILabel().then({
         $0.text = "Q1."
         $0.font = Font.regular(size: 18)
-        $0.textColor = DesignSystemAsset.gray100.color
+        $0.textColor = DesignSystemAsset.gray900.color
     })
     private lazy var titleLabel = UILabel().then({
         $0.text = "주로 마시는 술"
@@ -57,11 +78,19 @@ public class SelectDrinkViewController: SelectTasteBaseViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = DesignSystemAsset.black.color
+        navigationController?.setNavigationBarHidden(true, animated: false)
         addViews()
         makeConstraints()
         bind()
+        
+        switch selectTasteCase {
+        case .next:
+            submitTouchableLabel.text = "다음"
+        case .store, .bottomSheet:
+            submitTouchableLabel.text = "저장"
+        }
     }
+    
     public override func addViews() {
         super.addViews()
         view.addSubview(containerView)
@@ -76,9 +105,9 @@ public class SelectDrinkViewController: SelectTasteBaseViewController {
     public override func makeConstraints() {
         super.makeConstraints()
         containerView.snp.makeConstraints {
-            $0.top.equalToSuperview()
+            $0.top.equalTo(topView.snp.bottom)
             $0.leading.trailing.equalToSuperview().inset(moderateScale(number: 20))
-            $0.bottom.equalTo(nextButtonBackgroundView.snp.top)
+            $0.bottom.equalTo(nextButtonBackgroundView.snp.top).offset(moderateScale(number: -25))
         }
         numberLabel.snp.makeConstraints {
             $0.top.equalToSuperview()
@@ -107,7 +136,13 @@ public class SelectDrinkViewController: SelectTasteBaseViewController {
             $0.leading.trailing.bottom.equalToSuperview()
         }
     }
+    
     private func bind() {
+        viewModel.userInfoPublisher()
+            .sink { [weak self] _ in
+                self?.viewModel.sendPairingsValue(PairingType.drink)
+            }.store(in: &cancelBag)
+        
         viewModel.setCompletedSnackDataPublisher().sink { [weak self] _ in
             self?.drinkCollectionView.reloadData()
         }
@@ -119,19 +154,42 @@ public class SelectDrinkViewController: SelectTasteBaseViewController {
                     self?.showAlertView(withType: .oneButton,
                                         title: "선택 불가",
                                         description: "3개 이상 선택할 수 없어요.",
+                                        isSubmitColorYellow: true,
                                         submitCompletion: nil,
                                         cancelCompletion: nil)
                 } else {
                     self?.countLabel.text = String(result)
                     self?.countLabel.textColor = result == 0 ? DesignSystemAsset.gray300.color : DesignSystemAsset.main.color
                     self?.selectLabel.textColor = result == 0 ? DesignSystemAsset.gray300.color : DesignSystemAsset.main.color
+                    self?.submitTouchableLabel.backgroundColor = result == 0 ? DesignSystemAsset.gray100.color : DesignSystemAsset.main.color
+                    self?.submitTouchableLabel.isUserInteractionEnabled = result == 0 ? false : true
+                    self?.submitTouchableLabel.textColor = result == 0 ? DesignSystemAsset.gray300.color : DesignSystemAsset.gray050.color
                 }
             }
             .store(in: &cancelBag)
+        
+        viewModel.completeDrinkPreferencePublisher()
+            .sink { [weak self] in
+                guard let self = self else { return }
+                if let authCoordinator = self.coordinator as? AuthCoordinator {
+                    authCoordinator.moveTo(appFlow: TabBarFlow.auth(.profileInput(.selectSnack)), userData: nil)
+                } else if let moreCoordinator = self.coordinator as? MoreCoordinator {
+                    StaticValues.isLoggedIn.send(true)
+                    self.navigationController?.popViewController(animated: true)
+                }
+            }.store(in: &cancelBag)
+        
+        viewModel.getUserInfo()
     }
     
     public override func setupIfNeeded() {
-        
+        selectLimitView.updateView("3개까지 고를 수 있어요!")
+        topView.backTouchableView.setOpaqueTapGestureRecognizer { [weak self] in
+            self?.navigationController?.popViewController(animated: true)
+        }
+        submitTouchableLabel.setOpaqueTapGestureRecognizer { [weak self] in
+            self?.viewModel.sendSetUserDrinkPreference()
+        }
     }
 }
 
@@ -145,7 +203,7 @@ extension SelectDrinkViewController: UICollectionViewDelegate, UICollectionViewD
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: DrinkCell.reuseIdentifer, for: indexPath) as? DrinkCell else { return UICollectionViewCell() }
         
         let model = viewModel.getDataSource(indexPath.row)
-        cell.model = model
+        cell.bind(model)
         cell.setSelectColor(model.isSelect)
         
         return cell

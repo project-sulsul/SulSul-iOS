@@ -9,7 +9,7 @@ import UIKit
 import DesignSystem
 
 final class TransferViewController: BaseViewController {
-    var coordinator: TransferBaseCoordinator?
+    var coordinator: WriteFeedBaseCoordinator?
     
     override func viewDidLoad() {
         super.viewDidLoad()

@@ -15,19 +15,20 @@ public protocol CurrentCoordinated {
     var currentFlowManager: CurrentFlowManager? { get set }
 }
 
-extension CurrentCoordinated {
-    var currentNavigationViewController: UINavigationController? {
+public extension CurrentCoordinated {
+    public var currentNavigationViewController: UINavigationController? {
         get {
             (currentFlowManager?.currentCoordinator?.rootViewController as? UINavigationController)
         }
     }
 }
+
 public protocol TabBarBaseCoordinator: Coordinator, CurrentCoordinated {
-//    var commonCoordinator: CommonBaseCoordinator { get }
-//    var authCoordinator: AuthBaseCoordinator { get }
+    var commonCoordinator: CommonBaseCoordinator { get }
+    var authCoordinator: AuthBaseCoordinator { get }
     var homeCoordinator: HomeBaseCoordinator { get }
-    var benefitCoordinator: BenefitBaseCoordinator { get }
-    var transferCoordinator: TransferBaseCoordinator { get }
+    var rankingCoordinator: RankingBaseCoordinator { get }
+    var writeFeedCoordinator: WriteFeedBaseCoordinator { get }
     var transferHistoryCoordinator: TransferHistoryBaseCoordinator { get }
     var moreCoordinator: MoreBaseCoordinator { get }
 }
@@ -35,3 +36,4 @@ public protocol TabBarBaseCoordinator: Coordinator, CurrentCoordinated {
 protocol TabBarChildBaseCoordinated {
     func moveToTopContent()
 }
+

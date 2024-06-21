@@ -25,11 +25,13 @@ final class SearchResultEmptyView: UIView {
         $0.numberOfLines = 0
     }
     
-    lazy var addSnackButton = UIButton().then {
-        $0.setTitle("안주 추가하러 가기", for: .normal)
-        $0.titleLabel?.font = Font.bold(size: 16)
-        $0.setTitleColor(DesignSystemAsset.gray700.color, for: .normal)
+    lazy var addSnackButton = UILabel().then {
+        $0.text = "안주 추가하러 가기"
+        $0.font = Font.bold(size: 16)
+        $0.textColor = DesignSystemAsset.gray700.color
         $0.layer.cornerRadius = moderateScale(number: 8)
+        $0.textAlignment = .center
+        $0.clipsToBounds = true
         $0.backgroundColor = DesignSystemAsset.gray200.color
     }
     
@@ -53,12 +55,11 @@ extension SearchResultEmptyView {
     
     private func makeConstraints() {
         emptyStackView.snp.makeConstraints {
-            $0.top.equalToSuperview().inset(moderateScale(number: 40))
-            $0.width.centerX.equalToSuperview()
+            $0.edges.equalToSuperview()
         }
         
         addSnackButton.snp.makeConstraints {
-            $0.height.equalTo(moderateScale(number: 40))
+            $0.height.equalTo(moderateScale(number: 52))
             $0.width.equalTo(moderateScale(number: 166))
         }
     }

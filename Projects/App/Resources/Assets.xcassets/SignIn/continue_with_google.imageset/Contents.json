@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "start_with_google_wide.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

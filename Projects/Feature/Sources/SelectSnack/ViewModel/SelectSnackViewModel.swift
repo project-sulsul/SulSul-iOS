@@ -8,34 +8,119 @@
 import Combine
 import Foundation
 import Service
+import Alamofire
 
 final class SelectSnackViewModel {
+    private lazy var foodCategories: [String: String] = [
+        "패스트푸드": "🍕",
+        "육류": "🥩",
+        "탕류": "🍲",
+        "튀김류": "🍤",
+        "과일": "🍎",
+        "과자": "🥨",
+        "밥류": "🍚",
+        "면류": "🍜",
+        "회": "🐟",
+    ]
+    
     private lazy var jsonDecoder = JSONDecoder()
-    private lazy var mapper = SnackModelMapper()
+    private var cancelBag = Set<AnyCancellable>()
+    private lazy var mapper = PairingModelMapper()
+    private lazy var userMapper = UserMapper()
+    
+    private let userId = UserDefaultsUtil.shared.getInstallationId()
+    private let accessToken = KeychainStore.shared.read(label: "accessToken")
+    private var userInfo: UserInfoModel?
+    private var selectSnackType: SelectTasteCase
     
     // MARK: Output Subject
     private lazy var setCompletedSnackData = PassthroughSubject<Void, Never>()
     private lazy var searchResultCountData = PassthroughSubject<Int, Never>()
+    private var setUserSnackPreference = PassthroughSubject<Void, Never>()
+    private var completeSnackPreference = PassthroughSubject<Void, Never>()
     private lazy var initSectionModels = [SnackSectionModel]()
     private lazy var sectionModels = [SnackSectionModel]()
     private lazy var cellModels = [SnackModel]()
     
-    init() {
+    init(selectSnackType: SelectTasteCase) {
+        self.selectSnackType = selectSnackType
+        bind()
+    }
+    
+    private func bind() {
         requestSnackList()
+        
+        getUserInfo()
+        
+        setUserSnackPreference
+            .sink { [weak self] _ in
+                guard let self = self else { return }
+                let selectedIds = cellModels.filter { $0.isSelect }.map { $0.id }
+                
+                let params: [String: Any] = ["alcohols": userInfo?.preference.alcohols,
+                                             "foods": selectedIds]
+                var headers: HTTPHeaders = [
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + accessToken!
+                ]
+                
+                NetworkWrapper.shared.putBasicTask(stringURL: "/users/\(userId)/preference", parameters: params, header: headers) { [weak self] result in
+                    switch result {
+                    case .success(let response):
+                        if let userData = try? self?.jsonDecoder.decode(RemoteUserInfoItem.self, from: response) {
+                            self?.completeSnackPreference.send(())
+                        } else {
+                            print("Decoding failed.")
+                        }
+                    case.failure(let error):
+                        print(error)
+                    }
+                }
+            }.store(in: &cancelBag)
+    }
+    
+    private func getUserInfo() {
+        NetworkWrapper.shared.getBasicTask(stringURL: "/users/\(userId)") { [weak self] result in
+            switch result {
+            case .success(let response):
+                if let userData = try? self?.jsonDecoder.decode(RemoteUserInfoItem.self, from: response) {
+                    guard let mappedUserInfo = self?.userMapper.userInfoModel(from: userData) else { return }
+                    self?.userInfo = mappedUserInfo
+                    self?.requestSnackList()
+                } else {
+                    print("디코딩 모델 에러 9")
+                }
+            case .failure(let error):
+                print(error)
+            }
+        }
     }
     
     private func makeSectionModelsWith(_ snackModels: [SnackModel]) -> [SnackSectionModel] {
         guard var currentSection = snackModels.first?.subtype else { return [] }
         
+        let selectedSnackIds = userInfo?.preference.foods
+        var snackModelsWithSelectedValue = snackModels
+        
+        if selectSnackType != .bottomSheet {
+            selectedSnackIds?.forEach { id in
+                if let selectedIndex = snackModelsWithSelectedValue.firstIndex(where: { $0.id == id }) {
+                    snackModelsWithSelectedValue[selectedIndex].isSelect = true
+                }
+            }
+        }
+        
+        self.cellModels = snackModelsWithSelectedValue
+        
         var sectionModels: [SnackSectionModel] = []
         var cellModelsOfSameSection: [SnackModel] = []
         
-        snackModels.enumerated().forEach { index, snack in
+        snackModelsWithSelectedValue.enumerated().forEach { index, snack in
             if snack.subtype == currentSection {
                 cellModelsOfSameSection.append(snack)
             } else {
-                let beforeCellModel = snackModels[index - 1]
-                let headerModel = SnackHeader(snackHeaderTitle: beforeCellModel.subtype, snackHeaderImage: beforeCellModel.image)
+                let beforeCellModel = snackModelsWithSelectedValue[index - 1]
+                let headerModel = SnackHeader(snackHeaderTitle: beforeCellModel.subtype, snackHeaderImage: foodCategories[beforeCellModel.subtype] ?? "")
                 let completedSectionModel: SnackSectionModel = .init(cellModels: cellModelsOfSameSection, headerModel: headerModel)
                 
                 sectionModels.append(completedSectionModel)
@@ -62,7 +147,6 @@ final class SelectSnackViewModel {
         
         sectionModels = changedSectionModels
         cellModels = changedCellModels
-        print("|| 변경 값 : \(sectionModels[indexPath.section].cellModels[indexPath.row].isSelect)")
     }
     
     // MARK: Output Method
@@ -128,6 +212,18 @@ final class SelectSnackViewModel {
     func searchResultCountDataPublisher() -> AnyPublisher<Int, Never> {
         return searchResultCountData.eraseToAnyPublisher()
     }
+    
+    func sendSetUserSnackPreference() {
+        setUserSnackPreference.send(())
+    }
+    
+    func completeSnackPreferencePublisher() -> AnyPublisher<Void, Never> {
+        return completeSnackPreference.eraseToAnyPublisher()
+    }
+    
+    func getUserNickName() -> String {
+        return userInfo?.nickname ?? ""
+    }
 }
 
 extension SelectSnackViewModel {
@@ -139,12 +235,22 @@ extension SelectSnackViewModel {
                 switch result {
                 case .success(let responseData):
                     if let pairingsData = try? selfRef.jsonDecoder.decode(PairingModel.self, from: responseData) {
-                        let mappedData = selfRef.mapper.snackModel(from: pairingsData.pairings ?? [])
+                        let mappedData = selfRef.mapper.pairingModel(from: pairingsData.pairings ?? [])
                         
-                        selfRef.initSectionModels = selfRef.makeSectionModelsWith(mappedData)
+                        let snackModels = mappedData.map { pairing -> SnackModel in
+                            return SnackModel(id: pairing.id ?? 0,
+                                              type: pairing.type ?? "",
+                                              subtype: pairing.subtype ?? "",
+                                              name: pairing.name ?? "",
+                                              image: pairing.image ?? "",
+                                              description: pairing.description ?? "",
+                                              isSelect: pairing.isSelect ?? false,
+                                              highlightedText: pairing.highlightedText ?? "")
+                        }
+                        
+                        selfRef.initSectionModels = selfRef.makeSectionModelsWith(snackModels)
                         selfRef.sectionModels = selfRef.initSectionModels
-                        selfRef.setCompletedSnackData.send(()) 
-                        selfRef.cellModels = mappedData
+                        selfRef.setCompletedSnackData.send(())
                     } else {
                         print("[/pairings] Fail Decode")
                     }

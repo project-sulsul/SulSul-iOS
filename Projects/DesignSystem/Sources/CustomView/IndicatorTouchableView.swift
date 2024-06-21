@@ -9,6 +9,7 @@ import UIKit
 
 public final class IndicatorTouchableView: TouchableView {
     private let indicator = UIActivityIndicatorView()
+    private lazy var alwaysClickable: Bool = false
     private let label = UILabel()
     
     public var text: String? {
@@ -34,6 +35,12 @@ public final class IndicatorTouchableView: TouchableView {
         
         layout()
         attribute()
+    }
+    
+    public convenience init(alwaysClickable: Bool = false) {
+        self.init(frame: .zero)
+        
+        self.alwaysClickable = alwaysClickable
     }
     
     @available(*, unavailable)
@@ -66,6 +73,19 @@ public final class IndicatorTouchableView: TouchableView {
         
         indicator.snp.makeConstraints {
             $0.center.equalToSuperview()
+        }
+    }
+    
+    public func setClickable(_ canClick: Bool) {
+        if canClick {
+            isUserInteractionEnabled = alwaysClickable || true
+            backgroundColor = DesignSystemAsset.main.color
+            textColor = DesignSystemAsset.gray050.color
+            
+        } else {
+            isUserInteractionEnabled = false
+            backgroundColor = DesignSystemAsset.gray200.color
+            textColor = DesignSystemAsset.gray700.color
         }
     }
 }

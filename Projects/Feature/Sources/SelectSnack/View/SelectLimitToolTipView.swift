@@ -72,4 +72,8 @@ extension SelectLimitToolTipView {
             $0.bottom.centerX.equalToSuperview()
         }
     }
+    
+    func updateView(_ title: String) {
+        selectLimitLabel.text = title
+    }
 }

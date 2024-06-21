@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol MoreBaseCoordinator: Coordinator {}
+public protocol MoreBaseCoordinator: Coordinator, CurrentCoordinated {}
 
 protocol MoreBaseCoordinated {
     var coordinator: MoreBaseCoordinator? { get }

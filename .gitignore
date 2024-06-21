@@ -159,3 +159,5 @@ Derived/
 
 ### Tuist managed dependencies ###
 Tuist/Dependencies
+Tuist/Signing
+Tuist/master.key

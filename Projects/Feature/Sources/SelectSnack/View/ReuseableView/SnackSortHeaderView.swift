@@ -17,7 +17,9 @@ final class SnackSortHeaderView: UITableViewHeaderFooterView {
         $0.spacing = moderateScale(number: 8)
     }
     
-    private lazy var snackSortImageView = UIImageView()
+    private lazy var snackSortImojiLabel = UILabel().then {
+        $0.font = Font.bold(size: 14)
+    }
     
     private lazy var snackSortLabel = UILabel().then {
         $0.font = Font.bold(size: 14)
@@ -36,9 +38,7 @@ final class SnackSortHeaderView: UITableViewHeaderFooterView {
     }
     
     func bind(_ headerModel: SnackHeader) {
-        if let url = URL(string: headerModel.snackHeaderImage) {
-            snackSortImageView.loadImage(url)            
-        }
+        snackSortImojiLabel.text = headerModel.snackHeaderImage
         snackSortLabel.text = headerModel.snackHeaderTitle
     }
 }
@@ -46,17 +46,12 @@ final class SnackSortHeaderView: UITableViewHeaderFooterView {
 extension SnackSortHeaderView {
     private func addViews() {
         addSubview(contentStackView)
-        contentStackView.addArrangedSubviews([snackSortImageView, snackSortLabel])
+        contentStackView.addArrangedSubviews([snackSortImojiLabel, snackSortLabel])
     }
     
     private func makeConstraints() {
         contentStackView.snp.makeConstraints {
             $0.height.centerY.leading.equalToSuperview()
-        }
-        
-        snackSortImageView.snp.makeConstraints {
-            $0.height.equalTo(moderateScale(number: 22))
-            $0.width.equalTo(moderateScale(number: 14))
         }
     }
 }

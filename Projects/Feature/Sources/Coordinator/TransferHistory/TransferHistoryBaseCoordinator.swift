@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol TransferHistoryBaseCoordinator: Coordinator {}
+public protocol TransferHistoryBaseCoordinator: Coordinator, CurrentCoordinated {}
 
 protocol TransferHistoryBaseCoordinated {
     var coordinator: TransferHistoryBaseCoordinator? { get }

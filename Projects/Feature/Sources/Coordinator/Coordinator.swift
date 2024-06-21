@@ -38,30 +38,42 @@ extension Flow {
 }
 
 enum AppFlow: Flow {
-//    case intro
     case tabBar(TabBarFlow)
 }
 
 enum TabBarFlow: Flow {
-//    case auth(AuthFlow)
-//    case common
+    case auth(AuthFlow)
+    case common(CommonScene)
     case home(HomeScene)
-    case benefit
-    case transfer
-    case transferHistory
-    case more(MoreFlow)
+    case ranking(RankingScene)
+    case writeFeed(TransferScene)
+    case transferHistory(TransferHistoryScene)
+    case more(ProfileScene)
 }
 
 enum AuthFlow: Flow {
     case login
-    case signUp(SignUpScene)
-    case findEmail(FindEmailScene)
-    case findPassword(FindPasswordScene)
     case profileInput(ProfileInputScene)
 }
 
-enum MoreFlow: Flow {
-    case profile(ProfileManagementScene)
+enum CommonScene {
+    case web
+    case selectPhoto
+    case writePostText
+    case writeContent
+    case reportContent
+    case search
+    case comment
+    case detailFeed
+    case combineFeed
+    case setting
+    case selectSnack
+    case selectDrink
+}
+
+enum LoginScene {
+    case main
+    case loginError
 }
 
 enum SignUpScene {
@@ -71,10 +83,11 @@ enum SignUpScene {
     case password
     case referralCode
     case complete
-    case bottomSheet
+    case signUpError
 }
 
 enum FindEmailScene {
+    case countryBottomSheet
     case sms
     case smsAuthorization
     case complete
@@ -84,7 +97,7 @@ enum FindPasswordScene {
     case intro
     case email
     case sms
-    case smsAuthorization
+    case authorization
     case newPassword
     case complete
 }
@@ -93,12 +106,40 @@ enum HomeScene {
     case main
 }
 
+// MARK: - 랭킹페이지
+
+enum RankingScene {
+    case main
+    case search
+    case alarm
+    case detailDrink
+    case detailCombination
+}
+
+enum TransferScene {
+    case main
+}
+
+enum TransferHistoryScene {
+    case main
+}
+
 enum ProfileInputScene {
-    case name
-    case national
-    case birthDay
-    case occupation
-    case address
+    case setUserName
+    case selectDrink
+    case selectSnack
+    case selectComplete
+}
+
+// MARK: - 마이페이지
+enum ProfileScene {
+    case main
+    case profileSetting
+    case profileEdit
+    case selectDrink
+    case selectSnack
+    case writeFeed
+    case blockUser
 }
 
 enum ProfileManagementScene {

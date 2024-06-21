@@ -6,7 +6,7 @@ import ProjectDescription
 /// See https://docs.tuist.io/guides/helpers/
 
 extension Project {
-    static let bundleID = "bumjun.SulSul-iOS"
+    static let bundleID = "com.SulSul-iOS"
     static let iosVersion = "15.0"
     
     /// Helper function to create the Project for this ExampleApp
@@ -14,19 +14,25 @@ extension Project {
         name: String,
         dependencies: [TargetDependency] = [],
         infoPlist: InfoPlist = .default,
+        packages: [ProjectDescription.Package] = [],
         sources: ProjectDescription.SourceFilesList? = nil,
         scripts: [TargetScript] = [],
-        resources: ProjectDescription.ResourceFileElements? = nil
+        resources: ProjectDescription.ResourceFileElements? = nil,
+        settings: Settings? = nil,
+        entitlements: ProjectDescription.Path? = nil
     ) -> Project {
         return self.project(
             name: name,
             product: .app,
-            bundleID: bundleID + "\(name)",
+            bundleID: bundleID,
+            packages: packages,
             dependencies: dependencies,
             infoPlist: infoPlist,
             sources: sources,
             scripts: scripts,
-            resources: resources
+            resources: resources,
+            settings: settings,
+            entitlements: entitlements
         )
     }
 }
@@ -37,16 +43,18 @@ extension Project {
                                  dependencies: [TargetDependency] = [],
                                  sources: ProjectDescription.SourceFilesList? = nil,
                                  scripts: [TargetScript] = [],
-                                 resources: ProjectDescription.ResourceFileElements? = nil
+                                 resources: ProjectDescription.ResourceFileElements? = nil,
+                                 settings: Settings? = nil
     ) -> Project {
         return .project(name: name,
-                        product: .framework,
+                        product: .staticFramework,
                         bundleID: bundleID + ".\(name)",
                         packages: packages,
                         dependencies: dependencies,
                         sources: sources,
                         scripts: scripts,
-                        resources: resources)
+                        resources: resources,
+                        settings: settings)
     }
     
     public static func project(
@@ -59,7 +67,9 @@ extension Project {
         infoPlist: InfoPlist = .default,
         sources: ProjectDescription.SourceFilesList? = nil,
         scripts: [TargetScript] = [],
-        resources: ProjectDescription.ResourceFileElements? = nil
+        resources: ProjectDescription.ResourceFileElements? = nil,
+        settings: Settings? = nil,
+        entitlements: ProjectDescription.Path? = ""
     ) -> Project {
         return Project(
             name: name,
@@ -74,8 +84,10 @@ extension Project {
                     infoPlist: infoPlist,
                     sources: sources,
                     resources: resources,
+                    entitlements: .file(path: entitlements ?? ""),
                     scripts: scripts,
-                    dependencies: dependencies
+                    dependencies: dependencies,
+                    settings: settings
                 )
             ],
             schemes: schemes
@@ -88,4 +100,8 @@ public extension TargetDependency {
     static let snapKit: TargetDependency = .external(name: "SnapKit")
     static let swinject: TargetDependency = .external(name: "Swinject")
     static let then: TargetDependency = .external(name: "Then")
+    static let kakaoSDK: TargetDependency = .external(name: "KakaoSDK")
+    static let kingfisher: TargetDependency = .external(name: "Kingfisher")
+    static let mantis: TargetDependency = .external(name: "Mantis")
+    static let lottie: TargetDependency = .external(name: "Lottie")
 }
