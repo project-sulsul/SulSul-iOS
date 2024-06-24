@@ -124,6 +124,7 @@ final class MainPreferenceDetailCell: UICollectionViewCell {
     func bind(_ model: AlcoholFeed.Feed) {
         feedImageView.kf.setImage(with: model.representImage)
         nickNameLabel.text = "@" + model.writerNickname
+        scoreLabel.text = String(model.score)
         contentLabel.text = model.title
         foodLabel.text = model.foods.first
     }
